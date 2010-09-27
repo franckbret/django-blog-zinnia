@@ -1,9 +1,9 @@
 {% load zinnia_tags tagging_tags i18n %}
 {% tags_for_model zinnia.entry as tag_entry %}
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xml:lang="{{ LANGUAGE_CODE }}" lang="{{ LANGUAGE_CODE }}" version="-//W3C//DTD XHTML 1.1//EN" xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<!doctype html> 
+<html lang="{{ LANGUAGE_CODE }}"> 
+  <head> 
+	<meta charset="utf-8" /> 
     <meta http-equiv="cache-control" content="public" />
     <meta name="robots" content="follow, all" />
     <meta name="language" content="{{ LANGUAGE_CODE }}" />
@@ -11,7 +11,9 @@
     <meta name="keywords" content="django, blog, zinnia, {{ tag_entry|join:", "}}, {% block meta-keywords %}{% endblock %}" />
     <meta name="author" content="Fantomas42" />
     <meta name="engine" content="Zinnia {{ ZINNIA_VERSION }}" />
-    {% block meta %}{% endblock %}
+    {% block meta %}
+	<meta name=viewport content="width=device-width, maximum-scale=1.0, user-scalable=yes" /> 
+	{% endblock %}
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="stylesheet" type="text/css" media="screen, projection" href="{{ ZINNIA_MEDIA_URL }}css/screen.css" />
     <link rel="stylesheet" type="text/css" media="print" href="{{ ZINNIA_MEDIA_URL }}css/print.css" />
@@ -24,57 +26,61 @@
     <link rel="wlwmanifest" type="application/wlwmanifest+xml" href="{% url zinnia_wlwmanifest %}" />
     <link rel="alternate" type="application/rss+xml" title="{% trans "RSS Feed of latest entries" %}" href="{% url zinnia_entry_latest_feed %}" />
     {% block link %}{% endblock %}
-    {% block script %}{% endblock %}
+    {% block script %}
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]--> 
+	{% endblock %}
     <title>Zinnia's Blog - {% block title %}{% endblock %}</title>
   </head>
   <body id="zinnia">
     <div class="container">
-      <div id="header" class="span-24 last">
-	<div class="top-navigation">	  
-	  <a href="{% url zinnia_sitemap %}" title="{% trans "Sitemap" %}" class="link sitemap">
-	    {% trans "Sitemap" %}
-	  </a> |
-	  <a href="{% url zinnia_entry_latest_feed %}" title="{% trans "RSS Feed of latest entries" %}" class="link feeds">
-	    {% trans "RSS Feed" %}
-	  </a>
-	</div>
-	<h1>
-	  <a href="{% url zinnia_entry_archive_index %}" title="Zinnia's Blog">
-	    Zinnia's Blog
-	  </a>
-	</h1>
-	<blockquote>
-	  <p>Just another Zinnia weblog.</p>
-	</blockquote>
-	<div id="breadcrumbs" class="span-24 last">
-	  / {% block breadcrumbs %}{% endblock %}
-	</div>
-      </div>
+      <header id="header" class="span-24 last" role="banner">
+		<nav class="top-navigation">	  
+		  <a href="{% url zinnia_sitemap %}" title="{% trans "Sitemap" %}" class="link sitemap">
+			{% trans "Sitemap" %}
+		  </a> |
+		  <a href="{% url zinnia_entry_latest_feed %}" title="{% trans "RSS Feed of latest entries" %}" class="link feeds">
+			{% trans "RSS Feed" %}
+		  </a>
+		</nav>
+		<hgroup>
+		  <h1>
+			<a href="{% url zinnia_entry_archive_index %}" title="Zinnia's Blog">
+			  Zinnia's Blog
+			</a>
+		  </h1>
+		  <h2>Just another Zinnia weblog.</h2>
+		</hgroup>
+		<nav id="breadcrumbs" class="span-24 last">
+		  <a href="/" title="{% trans "Back to homepage" %}">{% trans "Homepage" %}</a> / {% block breadcrumbs %}{% endblock %}
+		</nav>
+      </header>
       <hr />
       <div id="body" class="span-24 last">
-	<div id="content" class="span-16 border">
-	  {% block content %}
-	  <h3>The content block need to be overrided!</h3>
-	  {% endblock %}
-	</div>
-	<div id="sidebar" class="span-8 last">
-	  <div class="welcome">
-	    <h3>Welcome!</h3>
-	    <p>
-	      This simple skin is the base template of the Zinnia application,
-	      used for displaying the blog quickly.
-	      <br />
-	      Feel free to override the <em>zinnia/base.html</em> template to change the appearence.
-	    </p>
-	  </div>
-	  {% block sidebar %}
-	  {% endblock %}
-	</div>
-      </div>
-      <hr />
-      <div id="footer" class="span-24 last">
-	<p>Powered by <a href="http://www.djangoproject.com">Django</a> and <a href="http://github.com/Fantomas42/django-blog-zinnia">Zinnia {{ ZINNIA_VERSION }}</a>.</p>
-      </div>
+		<div id="content" class="span-16 border">
+		  {% block content %}
+		  <h3>The content block need to be overrided!</h3>
+		  {% endblock %}
+		</div>
+		<div id="sidebar" class="span-8 last">
+		  <div class="welcome">
+			<h3>Welcome!</h3>
+			<p>
+			  This simple skin is the base template of the Zinnia application,
+			  used for displaying the blog quickly.
+			  <br />
+			  Feel free to override the <em>zinnia/base.html</em> template to change the appearence.
+			</p>
+		  </div>
+		  {% block sidebar %}
+		  {% endblock %}
+		</div>
+		  </div>
+		  <hr />
+		  <div id="footer" class="span-24 last">
+		<p>Powered by <a href="http://www.djangoproject.com">Django</a> and <a href="http://github.com/Fantomas42/django-blog-zinnia">Zinnia {{ ZINNIA_VERSION }}</a>.</p>
+		  </div>
     </div>
   </body>
 </html>
