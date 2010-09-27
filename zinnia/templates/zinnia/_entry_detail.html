@@ -1,101 +1,106 @@
 {% load tagging_tags comments i18n %}
-
-<div class="entryHeader span-16 last">
-  <h2 class="entryTitle">
-    <a href="{{ object.get_absolute_url }}" title="{{ object.title }}">
-      {{ object.title }}
-    </a>
-  </h2>
-  <p class="entryInfo">
-    {% trans "Written by" %} 
-    {% for author in object.authors.all %}
-    <a href="{% url zinnia_author_detail author %}" title="{% blocktrans with author as author %}Show {{ author }} entries{% endblocktrans %}">
-      <strong>{{ author }}</strong>
-    </a>{% if not forloop.last %}, {% endif %}
-    {% endfor %}
-    {% trans "on date" %} {{ object.creation_date|date:"d F Y"|capfirst }}
-    {% trans "in" %} 
-    {% for category in object.categories.all %}
-    <a href="{{ category.get_absolute_url }}" title="{{ category }}">
-      <em>{{ category }}</em>
-    </a>
-    {% if not forloop.last %}, {% endif %}
-    {% endfor %}.
-  </p>
-</div>
-
-<div class="entryBody span-16 last">
+<article class="hentry">
+  <header>
+	<h2 class="entry-title">
+	  <a href="{{ object.get_absolute_url }}" title="{{ object.title }}" rel="bookmark" >
+		{{ object.title }}
+	  </a>
+	</h2>
+	<dl class="entry-meta">
+	  <dt>{% trans "Written by" %} </dt>
+	  <dd>
+		<ul>{% for author in object.authors.all %}
+		  <li>
+			<a href="{% url zinnia_author_detail author %}" title="{% blocktrans with author as author %}Show {{ author }} entries{% endblocktrans %}" class="author vcard">
+			  <strong>{{ author }}</strong>
+			</a>{% if not forloop.last %}, {% endif %}
+		  </li>{% endfor %}
+		</ul>
+	  </dd>
+	  <dt>{% trans "Created on" %}</dt>
+	  <dd><time datetime="{{ object.creation_date|date:"c" }}" pubdate="pubdate" class="entry-date">{{ object.creation_date|date:"D d F Y"|capfirst }}</time></dd>
+	  <dt>{% trans "Category" %}</dt>
+	  <dd>
+		<ul>{% for category in object.categories.all %}
+		  <li>
+			<a href="{{ category.get_absolute_url }}" title="{{ category }}">
+			  <em>{{ category }}</em>
+			</a>{% if not forloop.last %}, {% endif %}
+		  </li>{% endfor %}
+		</ul>
+	  </dd>
+	</dl>
+  </header>
   {% if object.image %}
-  <div class="entryImage">
-    <p>
-      <a href="{{ object.get_absolute_url }}">
-	<img src="{{ object.image.url }}" alt="{{ object.title }}" class="left" />
-      </a>
-    </p>
-  </div>
+  <figure>
+	<a href="{{ object.get_absolute_url }}" title="{{ object.title }}">
+	<img src="{{ object.image.url }}" alt="{{ object.title }}" />
+	</a>
+	<figcaption>{{ object.title }}</figcaption>
+  </figure>
   {% endif %}
-  <div class="entryContent">
-    {{ object_content }}
+  <div class="entry-content">
+  {{ object_content }}
   </div>
-</div>
-
-<div class="entryFooter">
-  <p class="entryTags span-16 last">
-    <strong>{% trans "Tags" %}</strong> :
-    {% tags_for_object object as tag_list %}
-    {% for tag in tag_list %}  
-    <a href="{% url zinnia_tag_detail tag %}" title="Tag {{ tag }}">
-      {{ tag }}
-    </a>
-    {% empty %}
-    <span>{% trans "No tags" %}</span>
-    {% endfor %}
-  </p>
-
-  <p class="entryShortUrl span-16 last">
-    <strong>{% trans "Short url" %}</strong> : 
-    {% if object.short_url %}
-    <a href="{{ object.short_url }}" title="{{ object.title }}">
-      {{ object.short_url }}
-    </a>
-    {% else %}
-    {% trans "Unavailable" %}
-    {% endif %}
-  </p>
-  
-  <p class="entryComments span-16 last">
-    <strong>{% trans "Discussions" %}</strong> : 
-    {% with object.comments.count as comment_count %}
-    {% if comment_count %}
-    <a href="{{ object.get_absolute_url }}#comments" title="{{ object.title }}">
-      {% blocktrans count comment_count as comment_count %}{{ comment_count }} comment{% plural %}{{ comment_count }} comments{% endblocktrans %}
-    </a>
-    {% else %}
-      {% if object.comment_enabled %}
-      {% trans "No comments yet." %}
-    <a href="{{ object.get_absolute_url }}#comments" title="{{ object.title }}">
-      {% trans "Be first to comment!" %}
-    </a>
-      {% else %}
-      {% trans "Comments are closed." %}
-      {% endif %}
-    {% endif %}
-    {% endwith %}
-    {% with object.pingbacks.count as pingback_count %}
-    {% if pingback_count %}
-    , <a href="{{ object.get_absolute_url }}#pingbacks" title="{{ object.title }}">
-      {% blocktrans count pingback_count as pingback_count %}{{ pingback_count }} pingback{% plural %}{{ pingback_count }} pingbacks{% endblocktrans %}
-    </a>
-    {% endif %}
-    {% endwith %}
-    {% with object.trackbacks.count as trackback_count %}
-    {% if trackback_count %}
-    , <a href="{{ object.get_absolute_url }}#trackbacks" title="{{ object.title }}">
-      {% blocktrans count trackback_count as trackback_count %}{{ trackback_count }} trackback{% plural %}{{ trackback_count }} trackbacks{% endblocktrans %}
-    </a>
-    {% endif %}
-    {% endwith %}
-  </p>
-</div>
+  <footer class="entry-utility entry-footer">
+	<dl>
+	  <dt>{% trans "Tags" %}</dt>
+	  <dd>
+		<ul>{% tags_for_object object as tag_list %}{% for tag in tag_list %}  
+		  <li>
+			<a href="{% url zinnia_tag_detail tag %}" title="Tag {{ tag }}">
+			  {{ tag }}
+			</a>{% if not forloop.last %}, {% endif %}
+			{% empty %}
+			<span>{% trans "No tags" %}</span>
+		  </li>{% endfor %}
+		</ul>
+	  </dd>
+	  <dt>{% trans "Short url" %}</dt>
+	  <dd>
+		{% if object.short_url %}
+		<a href="{{ object.short_url }}" title="{{ object.title }}">
+		  {{ object.short_url }}
+		</a>
+		{% else %}
+		{% trans "Unavailable" %}
+		{% endif %}
+	  </dd>
+	  <dt>{% trans "Discussions" %}</dt>
+	  <dd>
+		{% with object.comments.count as comment_count %}
+		{% if comment_count %}
+		<a href="{{ object.get_absolute_url }}#comments" title="{{ object.title }}">
+		  {% blocktrans count comment_count as comment_count %}{{ comment_count }} comment{% plural %}{{ comment_count }} comments{% endblocktrans %}
+		</a>
+		{% else %}
+		  {% if object.comment_enabled %}
+		  {% trans "No comments yet." %}
+		<a href="{{ object.get_absolute_url }}#comments" title="{{ object.title }}">
+		  {% trans "Be first to comment!" %}
+		</a>
+		  {% else %}
+		  {% trans "Comments are closed." %}
+		  {% endif %}
+		{% endif %}
+		{% endwith %}
+		{% with object.pingbacks.count as pingback_count %}
+		{% if pingback_count %}
+		, <a href="{{ object.get_absolute_url }}#pingbacks" title="{{ object.title }}">
+		  {% blocktrans count pingback_count as pingback_count %}{{ pingback_count }} pingback{% plural %}{{ pingback_count }} pingbacks{% endblocktrans %}
+		</a>
+		{% endif %}
+		{% endwith %}
+		{% with object.trackbacks.count as trackback_count %}
+		{% if trackback_count %}
+		, <a href="{{ object.get_absolute_url }}#trackbacks" title="{{ object.title }}">
+		  {% blocktrans count trackback_count as trackback_count %}{{ trackback_count }} trackback{% plural %}{{ trackback_count }} trackbacks{% endblocktrans %}
+		</a>
+		{% endif %}
+		{% endwith %}
+	  </dd>
+	</dl>
+  </footer>
+</article>
 
 

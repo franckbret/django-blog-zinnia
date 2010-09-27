@@ -57,12 +57,12 @@
 		  <a href="/" title="{% trans "Back to homepage" %}">{% trans "Homepage" %}</a> / {% block breadcrumbs %}{% endblock %}
 		</nav>
       </header>
-	  <section id="content" >
+	  <div class="main">
 		{% block content %}
 		  <h3>The content block need to be overrided!</h3>
 		{% endblock %}
-	  </section>
-	  <aside>
+	  </div>
+	  <aside role="complementary">
 		<div class="welcome">
 		  <h3>Welcome!</h3>
 		  <p>
@@ -75,9 +75,9 @@
 		  {% block sidebar %}
 		  {% endblock %}
 	  </aside>
-	  <div id="footer" class="span-24 last">
+	  <footer class="site-infos">
 		<p>Powered by <a href="http://www.djangoproject.com">Django</a> and <a href="http://github.com/Fantomas42/django-blog-zinnia">Zinnia {{ ZINNIA_VERSION }}</a>.</p>
-	  </div>
+	  </footer>
     </div>
   </body>
 </html>
