@@ -142,7 +142,7 @@ body.blog{ background-color:#444; }
             
             article>header { margin-bottom: 1em; }
             article>header>h2 { margin: 0; }
-            article>header>dl { margin: 0; }
+            article>header>dl { margin: 0; background-color:#efefef; }
             article>header>dl>dt { display:inline-block; width:19%; margin-left:1%; vertical-align: top; }
             article>header>dl>dd { display:inline-block; width:78%; margin-left:1%; vertical-align: top; }
             article>header>dl>dd>ul { margin: 0; padding:0;}
@@ -160,6 +160,11 @@ body.blog{ background-color:#444; }
             
             article{}
                 article h1, article h2, article h3 { margin-top: 0; }
+                
+            aside.inner-links{width:100%; display:inline-block; vertical-align: top; }
+            aside.inner-links>nav>a.next{width:50%; display:inline-block; vertical-align: top; }
+            aside.inner-links>nav.previous-next>a.previous-entry{width:48%; display:inline-block; vertical-align: top; text-align:right;}
+            aside.inner-links>nav.previous-next>a.next-entry{width:48%; display:inline-block; vertical-align: top; text-align:left;}
 
 /* =Aside
   -------------------------------------------------------------- */
