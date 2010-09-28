@@ -60,8 +60,7 @@
 	{% if comment_list.count %}
 	<ol class="comment-list">
 	  {% for comment in comment_list %}
-	  {% comment %} [IMP NEEDED] a comment.is_author key returning a boolean should be better than this loop stuff ! {% endcomment %}
-	  <li id="comment-{{ comment.pk }}" class="comment {% cycle box1,box2 %} {% for author in object.authors.all %}{% if comment.user_name == author.username and comment.email == author.email %}author {% endif %}{% endfor %}">
+	  <li id="comment-{{ comment.pk }}" class="comment {% cycle box1,box2 %} {% if comment.user in object.authors.all %}author-post {% endif %}">
 		<div class="comment-body">
 		  <span class="vcard">
 		  <img src="{% get_gravatar comment.email 60 "G" %}" class="gravatar" alt="{{ comment.user_name }}" />
@@ -125,7 +124,7 @@
 	  {% for trackback in trackback_list %}
 	  <li id="trackback-{{ trackback.pk }}" class="trackback {% cycle box1,box2 %}">
 		<div class="trackback-body">
-		  <a href="{{ trackback.url }}">{{ trackback.user_name }}</a>
+		  <a href="{{ trackback.url }}" rel="follow">{{ trackback.user_name }}</a>
 		  {% trans "on date" %} {{ trackback.submit_date|date:"l d F Y" }}
 		  <cite>
 			{{ trackback.comment }}
