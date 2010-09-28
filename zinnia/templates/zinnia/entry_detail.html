@@ -13,153 +13,137 @@
 {% endblock %}
 
 {% block content %}
+<article class="hentry">
   {% with object.html_content|safe as object_content %}
   {% include "zinnia/_entry_detail.html" %}
   {% endwith %}
-<aside class="inner-links" role="complementary">
-  <nav class="previous-next">
-	{% with object.previous_entry as previous_entry %}
-	{% if previous_entry %}
-	  <a href="{{ previous_entry.get_absolute_url }}" title="{{ previous_entry.title }}" class="previous-entry">
-		<strong>{% trans "Previous" %} </strong><br />
-		{{ previous_entry.title }} 
-	  </a>
-	{% endif %}
-	{% endwith %}
-	{% with object.next_entry as next_entry %}
-	{% if next_entry %}
-	  <a href="{{ next_entry.get_absolute_url }}" title="{{ next_entry.title }}" class="next-entry">
-		<strong>{% trans "Next" %} </strong><br />
-		{{ next_entry.title }}
-	  </a>
-	{% endif %}
-	{% endwith %}
-  </nav>
-    {% if object.related_published_set %}
-  <nav class="related-entry">
-    <h3>{% trans "Related entries" %}</h3>
-    <ul>
-      {% for entry in object.related_published_set %}
-      <li>
-	<a href="{{ entry.get_absolute_url }}" title="{{ entry.title }}">{{ entry.title }}</a>
-      </li>
-      {% endfor %}
-    </ul>
-  </nav>
-  {% endif %}
-  <nav class="similar-entry">
-    <h3>{% trans "Similar entries" %}</h3>
-    {% get_similar_entries 5 %}
-  </nav>
-</aside>
-
-<hr />
-
-<div id="comments" class="span-16 last">
-  <h3>{% trans "Comments" %}</h3>
-  {% with object.comments as comment_list %}
-  {% if comment_list.count %}
-  <ol id="commentList" class="span-15 last">
-    {% for comment in comment_list %}
-    <li id="comment_{{ comment.pk }}" class="comment {% cycle box1,box2 %} span-15 last">
-      <div class="span-2">
-	<img src="{% get_gravatar comment.email 60 "G" %}" class="gravatar" alt="{{ comment.user_name }}"/>
-      </div>
-      <div class="comment_body span-13 last">
-	<div class="span-13 last">
-	  {% if comment.url %}
-	  <a href="{{ comment.url }}">{{ comment.user_name }}</a>
-	  {% else %}
-	  {{ comment.user_name }}
+  <section class="inner-links" role="complementary">
+	<nav class="previous-next">
+	  {% with object.previous_entry as previous_entry %}
+	  {% if previous_entry %}
+		<a href="{{ previous_entry.get_absolute_url }}" title="{{ previous_entry.title }}" class="previous-entry">
+		  <strong>{% trans "Previous" %} </strong><br />
+		  {{ previous_entry.title }} 
+		</a>
 	  {% endif %}
-	  {% trans "on date" %} {{ comment.submit_date|date:"l d F Y H:i" }}
-	</div>
-	<div class="span-13 last">
-	  <cite>
-	    {{ comment.comment }}
-	  </cite>
-	</div>
-      </div>
-    </li>
-    {% endfor %}
-  </ol>
-    {% if not object.comment_enabled %}
-  <p>{% trans "Comments are closed." %}</p>
-    {% endif %}
-  {% else %}
-    {% if object.comment_enabled %}
-  <p>{% trans "No comments yet." %}</p>
-    {% else %}
-  <p>{% trans "Comments are closed." %}</p>
-    {% endif %}
+	  {% endwith %}
+	  {% with object.next_entry as next_entry %}
+	  {% if next_entry %}
+		<a href="{{ next_entry.get_absolute_url }}" title="{{ next_entry.title }}" class="next-entry">
+		  <strong>{% trans "Next" %} </strong><br />
+		  {{ next_entry.title }}
+		</a>
+	  {% endif %}
+	  {% endwith %}
+	</nav>
+	  {% if object.related_published_set %}
+	<nav class="related-entry">
+	  <h3>{% trans "Related entries" %}</h3>
+	  <ul>
+		{% for entry in object.related_published_set %}
+		<li>
+	  <a href="{{ entry.get_absolute_url }}" title="{{ entry.title }}">{{ entry.title }}</a>
+		</li>
+		{% endfor %}
+	  </ul>
+	</nav>
+	{% endif %}
+	<nav class="similar-entry">
+	  <h3>{% trans "Similar entries" %}</h3>
+	  {% get_similar_entries 5 %}
+	</nav>
+  </section>
+
+  <section id="comments">
+	<h3>{% trans "Comments" %}</h3>
+	{% with object.comments as comment_list %}
+	{% if comment_list.count %}
+	<ol class="comment-list">
+	  {% for comment in comment_list %}
+	  {% comment %} [IMP NEEDED] a comment.is_author key returning a boolean should be better than this loop stuff ! {% endcomment %}
+	  <li id="comment-{{ comment.pk }}" class="comment {% cycle box1,box2 %} {% for author in object.authors.all %}{% if comment.user_name == author.username and comment.email == author.email %}author {% endif %}{% endfor %}">
+		<div class="comment-body">
+		  <span class="vcard">
+		  <img src="{% get_gravatar comment.email 60 "G" %}" class="gravatar" alt="{{ comment.user_name }}" />
+			{% if comment.url %}
+			<a href="{{ comment.url }}" title="{% blocktrans with comment.user_name as user_name %}Visit {{ user_name }} website{% endblocktrans %}">{{ comment.user_name }}</a>
+			{% else %}
+			{{ comment.user_name }}
+			{% endif %}
+			{% trans "on date" %} {{ comment.submit_date|date:"l d F Y H:i" }}
+		  </span>
+			<cite>
+			  {{ comment.comment }}
+			</cite>
+		</div>
+	  </li>
+	  {% endfor %}
+	</ol>
+	  {% if not object.comment_enabled %}
+	<p>{% trans "Comments are closed." %}</p>
+	  {% endif %}
+	{% else %}
+	  {% if object.comment_enabled %}
+	<p>{% trans "No comments yet." %}</p>
+	  {% else %}
+	<p>{% trans "Comments are closed." %}</p>
+	  {% endif %}
+	{% endif %}
+	{% endwith %}
+  </section>
+  <section id="pingbacks">
+	<h3>{% trans "Pingbacks" %}</h3>
+	{% with object.pingbacks as pingback_list %}
+	{% if pingback_list.count %}
+	<ol class="pingback-list">
+	  {% for pingback in pingback_list %}
+	  <li id="pingback-{{ pingback.pk }}" class="pingback {% cycle box1,box2 %}">
+		<div class="pingback-body">
+		  <a href="{{ pingback.url }}">{{ pingback.user_name }}</a>
+		  {% trans "on date" %} {{ pingback.submit_date|date:"l d F Y" }}
+		  <cite>
+			{{ pingback.comment }}
+		  </cite>
+		</div>
+	  </li>
+	  {% endfor %}
+	</ol>
+	{% endif %}
+	  {% if object.pingback_enabled %}
+	<p>{% trans "Pingbacks are open." %}</p>
+	  {% else %}
+	<p>{% trans "Pingbacks are closed." %}</p>
+	  {% endif %}
+	{% endwith %}  
+  </section>
+
+  <section id="trackbacks">
+	<h3>{% trans "Trackbacks" %}</h3>
+	{% with object.trackbacks as trackback_list %}
+	{% if trackback_list.count %}
+	<ol class="trackback-list">
+	  {% for trackback in trackback_list %}
+	  <li id="trackback-{{ trackback.pk }}" class="trackback {% cycle box1,box2 %}">
+		<div class="trackback-body">
+		  <a href="{{ trackback.url }}">{{ trackback.user_name }}</a>
+		  {% trans "on date" %} {{ trackback.submit_date|date:"l d F Y" }}
+		  <cite>
+			{{ trackback.comment }}
+		  </cite>
+		</div>
+	  </li>
+	  {% endfor %}
+	</ol>
+	{% endif %}
+	  {% if object.pingback_enabled %}
+	<p><a href="{% url zinnia_entry_trackback object.slug %}" rel="trackback">{% trans "Trackback URL" %}</a></p>
+	  {% endif %}
+	{% endwith %}  
+  </section>
+  {% if object.comment_enabled %}
+  <div class="comment-form">
+	{% render_comment_form for object %}
+  </div>
   {% endif %}
-  {% endwith %}
-</div>
-
-<hr />
-<div id="pingbacks" class="span-16 last">
-  <h3>{% trans "Pingbacks" %}</h3>
-  {% with object.pingbacks as pingback_list %}
-  {% if pingback_list.count %}
-  <ol id="pingbackList" class="span-16 last">
-    {% for pingback in pingback_list %}
-    <li id="pingback_{{ pingback.pk }}" class="pingback {% cycle box1,box2 %} span-16 last">
-      <div class="pingback_body span-16 last">
-	<div class="span-16 last">
-	  <a href="{{ pingback.url }}">{{ pingback.user_name }}</a>
-	  {% trans "on date" %} {{ pingback.submit_date|date:"l d F Y" }}
-	</div>
-	<div class="span-16 last">
-	  <cite>
-	    {{ pingback.comment }}
-	  </cite>
-	</div>
-      </div>
-    </li>
-    {% endfor %}
-  </ol>
-  {% endif %}
-    {% if object.pingback_enabled %}
-  <p>{% trans "Pingbacks are open." %}</p>
-    {% else %}
-  <p>{% trans "Pingbacks are closed." %}</p>
-    {% endif %}
-  {% endwith %}  
-</div>
-
-<hr />
-<div id="trackbacks" class="span-16 last">
-  <h3>{% trans "Trackbacks" %}</h3>
-  {% with object.trackbacks as trackback_list %}
-  {% if trackback_list.count %}
-  <ol id="trackbackList" class="span-16 last">
-    {% for trackback in trackback_list %}
-    <li id="trackback_{{ trackback.pk }}" class="trackback {% cycle box1,box2 %} span-16 last">
-      <div class="trackback_body span-16 last">
-	<div class="span-16 last">
-	  <a href="{{ trackback.url }}">{{ trackback.user_name }}</a>
-	  {% trans "on date" %} {{ trackback.submit_date|date:"l d F Y" }}
-	</div>
-	<div class="span-16 last">
-	  <cite>
-	    {{ trackback.comment }}
-	  </cite>
-	</div>
-      </div>
-    </li>
-    {% endfor %}
-  </ol>
-  {% endif %}
-    {% if object.pingback_enabled %}
-  <p><a href="{% url zinnia_entry_trackback object.slug %}" rel="trackback">{% trans "Trackback URL" %}</a></p>
-    {% endif %}
-  {% endwith %}  
-</div>
-
-{% if object.comment_enabled %}
-<div class="commentForm span-16 last">
-  {% render_comment_form for object %}
-</div>
-{% endif %}
-
+</article>
 {% endblock %}
