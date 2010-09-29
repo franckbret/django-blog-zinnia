@@ -31,12 +31,12 @@
 {% endif %}
 
 {% for object in object_list %}
-<div class="entry span-16 last">
+<article class="hentry">
   {% with object.html_content|truncatewords_html:100|safe as object_content %}
   {% include "zinnia/_entry_detail.html" %}
   {% endwith %}
-</div>
-<hr />
+</article>
+
 {% empty %}
   {% trans "No entries yet." %}
 {% endfor %}

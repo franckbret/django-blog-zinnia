@@ -9,16 +9,16 @@
 	<dt>{% trans "Written by" %} </dt>
 	<dd>
 	  <ul>{% for author in object.authors.all %}
-		<li>
-		  <a href="{% url zinnia_author_detail author %}" title="{% blocktrans with author as author %}Show {{ author }} entries{% endblocktrans %}" class="author vcard">
-			<strong>{{ author }}</strong>
+		<li class="vcard">
+		  <a href="{% url zinnia_author_detail author %}" title="{% blocktrans with author as author %}Show {{ author }} entries{% endblocktrans %}" class="author">
+			<strong class="fn">{{ author }}</strong>
 		  </a>{% if not forloop.last %}, {% endif %}
 		</li>{% endfor %}
 	  </ul>
 	</dd>
 	<dt>{% trans "Created on" %}</dt>
 	<dd><time datetime="{{ object.creation_date|date:"c" }}" pubdate="pubdate" class="entry-date">{{ object.creation_date|date:"D d F Y"|capfirst }}</time></dd>
-	<dt>{% trans "Category" %}</dt>
+	<dt class="entry-category">{% trans "Category" %}</dt>
 	<dd>
 	  <ul>{% for category in object.categories.all %}
 		<li>
@@ -43,7 +43,7 @@
 </div>
 <footer class="entry-footer">
   <dl class="entry-utility">
-	<dt>{% trans "Tags" %}</dt>
+	<dt class="entry-tags">{% trans "Tags" %}</dt>
 	<dd>
 	  <ul>{% tags_for_object object as tag_list %}{% for tag in tag_list %}  
 		<li>
@@ -55,7 +55,7 @@
 		</li>{% endfor %}
 	  </ul>
 	</dd>
-	<dt>{% trans "Short url" %}</dt>
+	<dt class="entry-short-url">{% trans "Short url" %}</dt>
 	<dd>
 	  {% if object.short_url %}
 	  <a href="{{ object.short_url }}" title="{{ object.title }}">
@@ -65,7 +65,7 @@
 	  {% trans "Unavailable" %}
 	  {% endif %}
 	</dd>
-	<dt>{% trans "Discussions" %}</dt>
+	<dt class="entry-comments">{% trans "Discussions" %}</dt>
 	<dd>
 	  {% with object.comments.count as comment_count %}
 	  {% if comment_count %}
