@@ -7,10 +7,10 @@
 
 {% block sidebar %}
 <div class="search">
-  <h3>{% trans "Search" %}</h3>
   <form method="get" id="searchform" action="{% url zinnia_entry_search %}">
     <p>
-      <input type="text" value="{% trans "Keywords..." %}" name="pattern" id="searchbox" onfocus="this.value=''"/>
+      <label for="search">{% trans "Search" %}</label>
+	  <input type="search" id="search" placeholder="{% trans "Keywords..." %}" name="pattern" />
       <input type="submit" class="submitbutton" value="OK" />
     </p>
   </form>
