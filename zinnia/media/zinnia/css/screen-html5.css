@@ -49,9 +49,10 @@ pre { margin: 0.4em 0; white-space: pre; }
 
 pre, code, tt { font: 1em 'andale mono', 'lucida console', monospace; line-height: 1.5; }
 
-li ul, li ol { margin: 0 0.4em; }
+li ul, li ol { margin: 0 0.2em; }
 
-ul { margin: 0 0.4em 0.4em 0.4em; list-style-type: disc; }
+ul { margin: 0 0.4em 0.4em 1.2em; padding:0 0 0 0.8em; list-style-type: disc; font-size:medium; }
+ul ul{ list-style-type: square; }
 
 ol { margin: 0 0.4em 0.4em 0.4em; list-style-type: decimal; }
 
@@ -96,22 +97,20 @@ q:before, q:after { content:''; content:none; }
 /* =Forms
   -------------------------------------------------------------- */
 
-label { font-weight: bold; }
 form { -moz-border-radius: 8px;	-webkit-border-radius: 8px;	-khtml-border-radius: 8px; border-radius: 8px;	counter-reset: fieldsets; padding: 0.2em; width: 98%; margin:0 auto; background-color: #efefef; color:#444; }
 
     form legend { font-size: 1.6em;	font-weight: bold; padding-top:0.4em; }
 	form fieldset {	border: none; margin-bottom: 10px; }
 	form fieldset:last-of-type { margin-bottom: 0; }
-		form fieldset fieldset legend { color: #999; font-size: 1.1em; font-weight: normal; padding-bottom: 0; }
 		
 		form ol li { line-height: 3em; list-style: none; padding: 5px 10px; margin-bottom: 2px; }
 		form ol ol li {	background: none; border: none; float: left; }
 		
-		form label { color:#999; float: left; font-size: 1.5em; width: 100%; }
+		form label { color:#999; font-weight: bold; font-size: 1.5em; width: 100%; float: left;}
 			
+		form fieldset fieldset legend { color: #999; font-size: 1.1em; font-weight: normal; padding-bottom: 0; }
 		form fieldset fieldset label { background:none no-repeat left 50%; width: auto; }
-				
-			form fieldset fieldset label:hover { cursor: pointer; }
+		form fieldset fieldset label:hover { cursor: pointer; }
 			
 		form input:not([type=radio]), form textarea { -moz-border-radius: 8px; -webkit-border-radius: 8px; -khtml-border-radius: 8px; border-radius: 8px; background: #ffffff; border: solid 2px #eaeaea; outline: none; padding: 5px; width: 98%; }
 
@@ -162,9 +161,15 @@ body.blog{ background-color:#fff; width:100%; margin : 0 auto; max-width:1152px;
 
 /* =Main
   -------------------------------------------------------------- */
-    div.main{ width:65%; margin-left:1%; display:inline-block; vertical-align: top; }
-    article.hentry{ border:solid 1px #CC3D33; margin-bottom:0.8em; 	border-top-left-radius: 16px 16px;	border-top-right-radius: 16px 16px;	-moz-border-radius-topleft: 16px;	-moz-border-radius-topright: 16px;	-webkit-border-top-left-radius: 16px;	-webkit-border-top-right-radius: 16px;}
+    div.main{ width:65%; margin-left:1%; display:inline-block; vertical-align: top; border: solid 1px #efefef; border-radius: 16px 16px;
+    -moz-border-radius: 16px; -webkit-border-radius: 16px;
+    box-shadow : 1px 2px 1px #CCC; -moz-box-shadow : 1px 2px 1px #CCC; -webkit-box-shadow : 1px 2px 1px #CCC;
+    }
         
+    article.hentry{margin-bottom:0.8em; }
+            
+            article.hentry ul, article.hentry dl{ font-size:small; }
+            
             article.hentry>header { margin-bottom: 1em; }
             article.hentry>header>h2.entry-title { background-color:#CC3D33; color:#fff; padding:0.4em; margin-bottom: 0; 	border-top-left-radius: 16px 16px;	border-top-right-radius: 16px 16px;	-moz-border-radius-topleft: 16px;	-moz-border-radius-topright: 16px;	-webkit-border-top-left-radius: 16px;	-webkit-border-top-right-radius: 16px;}
             article.hentry>header>h2.entry-title a{ display:block;color:#fff;}
@@ -179,8 +184,11 @@ body.blog{ background-color:#fff; width:100%; margin : 0 auto; max-width:1152px;
             article.hentry>section>h3{background-color:#444; color:#fff; padding:0.5em; margin:0; }
             
             article.hentry>section.inner-links{width:100%; display:inline-block; vertical-align: top; }
-            article.hentry>section.inner-links>nav.previous-next>a.previous-entry{width:48%; display:inline-block; vertical-align: top; text-align:right; background-color:#444; padding:0.8em;}
-            article.hentry>section.inner-links>nav.previous-next>a.next-entry{width:48%; display:inline-block; vertical-align: top; text-align:left; background-color:#444; padding:0.8em;}
+            article.hentry>section.inner-links>nav.previous-next>a{ width:48%; margin:1%; color:#fff; background-color:#CC3D33; padding:0.8em; display:inline-block; box-sizing: border-box; -moz-box-sizing: border-box; -ms-box-sizing: border-box; -webkit-box-sizing:border-box; }
+            article.hentry>section.inner-links>nav.previous-next>a.previous-entry{text-align:right;}
+            article.hentry>section.inner-links>nav.previous-next>a.next-entry{text-align:left; }
+            article.hentry>section.inner-links>nav.previous-next>a.previous-entry:after{content:" << "; font-size:1.8em;}
+            article.hentry>section.inner-links>nav.previous-next>a.next-entry:before{content:" >> " ; font-size:1.8em;}
             
             article.hentry>section>ol.comment-list{ color:#CECECE; font-size:200%; margin:0; padding-left: 1.666em;}
             article.hentry>section>ol.comment-list>li{ border-bottom:solid 1px #CECECE; margin-bottom:1px; padding:0.4em;}
@@ -198,10 +206,10 @@ body.blog{ background-color:#fff; width:100%; margin : 0 auto; max-width:1152px;
             
 /* =Aside
   -------------------------------------------------------------- */
-    aside{width:32%; margin-left:1%; display:inline-block; vertical-align: top;  }
+    aside{width:32%; margin-left:1%; display:inline-block; vertical-align: top; background-color:#FAFAFA;}
     aside div:first-child h3 { margin-top: 0; }
-    aside h3 { background-color: #eeeeee; padding: 0.5em; -moz-border-radius: 8px; -webkit-border-radius: 8px; -khtml-border-radius: 8px; border-radius: 8px; }
-    
+    aside h3 { background-color: #eeeeee; padding: 0.5em; margin:0.8em 0 0 0; -moz-border-radius: 8px; -webkit-border-radius: 8px; -khtml-border-radius: 8px; border-radius: 8px; }
+    /*aside li ul {font-size: 1em%; }*/
     aside #searchform label {display:block; }
     aside #searchform input: {display:block; }
     
