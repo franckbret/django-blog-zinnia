@@ -177,7 +177,7 @@ body.blog{ background-color:#fff; width:100%; margin : 0 auto; max-width:1152px;
             
             article.hentry>section>ol.comment-list{ color:#CECECE; font-size:200%; margin:0; padding-left: 1.666em;}
             article.hentry>section>ol.comment-list>li{ border-bottom:solid 1px #CECECE; margin-bottom:1px; padding:0.4em;}
-            article.hentry>section>ol.comment-list>li img{ display:inline; vertical-align:top; padding:0.2em;}
+            article.hentry>section>ol.comment-list>li img{ float:right; vertical-align:top; padding:0.2em;}
             article.hentry>section>ol.comment-list>li cite{ display:block; font-style:normal; padding:0.4em; font-size:50%; color:#444;}
             article.hentry>section>ol.comment-list>li span{ display:block; font-style:normal; padding:0.4em; font-size:70%; color:#444;}
             article.hentry>section>ol.comment-list>li.box1{ background-color:#F7F7F7;}

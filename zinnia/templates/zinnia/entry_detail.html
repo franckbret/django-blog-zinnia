@@ -24,19 +24,19 @@
 	<ol class="comment-list">
 	  {% for comment in comment_list %}
 	  <li id="comment-{{ comment.pk }}" class="comment {% cycle box1,box2 %} {% if comment.user in object.authors.all %}author-post {% endif %}">
-		<div class="comment-body">
-		  <span class="vcard">
+		<span class="meta vcard">
+		  {% if comment.url %}
+		  <a href="{{ comment.url }}" title="{% blocktrans with comment.user_name as user_name %}Visit {{ user_name }} website{% endblocktrans %}" class="fn">{{ comment.user_name }}</a>
+		  {% else %}
+		  <span class="fn">{{ comment.user_name }}</span>
+		  {% endif %}
+		  <time datetime="{{ object.creation_date|date:"c" }}" pubdate="pubdate" class="comment-date"> {% trans "says on" %} {{ comment.submit_date|date:"D d F Y H:i"|capfirst }}</time>
 		  <img src="{% get_gravatar comment.email 60 "G" %}" class="gravatar" alt="{{ comment.user_name }}" />
-			{% if comment.url %}
-			<a href="{{ comment.url }}" title="{% blocktrans with comment.user_name as user_name %}Visit {{ user_name }} website{% endblocktrans %}" class="fn">{{ comment.user_name }}</a>
-			{% else %}
-			<span class="fn">{{ comment.user_name }}</span>
-			{% endif %}
-			<time datetime="{{ object.creation_date|date:"c" }}" pubdate="pubdate" class="comment-date"> {% trans "says on" %} {{ comment.submit_date|date:"D d F Y H:i"|capfirst }}</time>
-			</span>
-			<cite>
-			  {{ comment.comment }}
-			</cite>
+		</span>
+		<div class="comment-body">
+		  <cite>
+			{{ comment.comment }}
+		  </cite>
 		</div>
 	  </li>
 	  {% endfor %}
