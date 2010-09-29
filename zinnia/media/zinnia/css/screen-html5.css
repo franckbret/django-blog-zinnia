@@ -85,7 +85,7 @@ a:hover { text-decoration: underline; }
 dl, dt, dd{ box-sizing: border-box; -moz-box-sizing: border-box; -ms-box-sizing: border-box; -webkit-box-sizing:border-box;}
 dl { margin: 0; background-color:#efefef; }
 dl dt { display:inline-block; width:19%; margin-left:1%; vertical-align: top; background-color:#ddd; border-bottom:solid 1px #efefef; }
-dl dd { display:inline-block; width:78%; margin-left:1%; vertical-align: top; border-bottom:solid 1px #ddd; }
+dl dd { display:inline-block; width:79%; margin-left:1%; vertical-align: top; border-bottom:solid 1px #ddd; }
 dl dd ul { margin: 0; padding:0;}
 dl dd ul li { display:inline-block; vertical-align: top; list-style-type:none;}
 
@@ -119,7 +119,8 @@ form { -moz-border-radius: 8px;	-webkit-border-radius: 8px;	-khtml-border-radius
 			form input:not([type=submit]):focus, form textarea:focus { background: #AAE0FF; border: solid 2px #eaeaea; }
 				
 			form input[type=radio] { float: left; margin-right: 5px; }
-			form input[type=submit]:hover { cursor: pointer; background: #AAE0FF; }
+			form input[type=submit]{ background: #444; color:#fff; width:100%; border:none;margin-top:0.4em;}
+			form input[type=submit]:hover { cursor: pointer; background: #AAE0FF; color:#444;}
 
 
 /* =Html5 elements
@@ -173,10 +174,14 @@ body.blog{ background-color:#fff; width:100%; margin : 0 auto; max-width:1152px;
             article.hentry>header { margin-bottom: 1em; }
             article.hentry>header>h2.entry-title { background-color:#CC3D33; color:#fff; padding:0.4em; margin-bottom: 0; 	border-top-left-radius: 16px 16px;	border-top-right-radius: 16px 16px;	-moz-border-radius-topleft: 16px;	-moz-border-radius-topright: 16px;	-webkit-border-top-left-radius: 16px;	-webkit-border-top-right-radius: 16px;}
             article.hentry>header>h2.entry-title a{ display:block;color:#fff;}
-            article.hentry>header>dl.entry-meta>dt{padding-left:1.5em;}
-            article.hentry>header>dl.entry-meta>dt.entry-category{ background: transparent url(../img/category.png) no-repeat scroll; }
+            /*article.hentry>header>dl.entry-meta>dt{padding-left:1.5em;}*/
+            article.hentry>header>dl.entry-meta>dt.entry-category:before{ content: url(../img/category.png); }
 
+            article.hentry>figure { text-align:center; }
             article.hentry>div.entry-content { padding:0.4em; font-size:120%; }
+            article.hentry>div.entry-content>p:nth-of-type(1){ font-weight:bold;}
+            
+            article.hentry>div.entry-content img { vertical-align:top; padding: 0.2em; margin:0 0.4em 0.2em 0.4em; border:solid 2px #efefef; }
             
             article.hentry>h1, article.hentry h2, article.hentry h3 { margin-top: 0; }
             
@@ -199,6 +204,7 @@ body.blog{ background-color:#fff; width:100%; margin : 0 auto; max-width:1152px;
             article.hentry>section>ol.comment-list>li.box2{ background-color:#efefef;}
             article.hentry>section>ol.comment-list>li.author-post{ background-color:#FCE8E8;}
             
+            article.hentry>footer.entry-footer{margin-top:0.8em; clear:both;}
             article.hentry>footer.entry-footer>dl.entry-utility>dt{padding-left:1.5em;}
             article.hentry>footer.entry-footer>dl.entry-utility>dt.entry-tags { background: transparent url(../img/tags.png) no-repeat scroll; }
             article.hentry>footer.entry-footer>dl.entry-utility>dt.entry-short-url { background: transparent url(../img/shorturl.png) no-repeat scroll; }
@@ -208,7 +214,7 @@ body.blog{ background-color:#fff; width:100%; margin : 0 auto; max-width:1152px;
   -------------------------------------------------------------- */
     aside{width:32%; margin-left:1%; display:inline-block; vertical-align: top; background-color:#FAFAFA;}
     aside div:first-child h3 { margin-top: 0; }
-    aside h3 { background-color: #eeeeee; padding: 0.5em; margin:0.8em 0 0 0; -moz-border-radius: 8px; -webkit-border-radius: 8px; -khtml-border-radius: 8px; border-radius: 8px; }
+    aside h3 { background-color: #eeeeee; padding: 0.5em; margin:0.8em 0 0 0; }
     /*aside li ul {font-size: 1em%; }*/
     aside #searchform label {display:block; }
     aside #searchform input: {display:block; }
@@ -241,22 +247,22 @@ body.blog{ background-color:#fff; width:100%; margin : 0 auto; max-width:1152px;
 /* =Specific elements
   -------------------------------------------------------------- */
 
-    div.paginator { margin-bottom: 0.4em; }
-    div.paginator span { font-size:1.5em; margin-left: 0.3em; padding: 0 0.5em 0 0.5em; float: left; border: 1px solid #eeeeee; }
+    div.paginator { margin: 0.8em; background-color:#444; text-align:center; }
+    div.paginator span { font-size:1.5em; margin-left: 0.3em; padding: 0 0.5em 0 0.5em; display:inline; background-color: #fff; border: 1px solid #eeeeee; }
     div.paginator span.page:hover, div.paginator span.next:hover, div.paginator span.previous:hover { background-color: #CC3D33; }
     div.paginator span.page:hover a, div.paginator span.next:hover a, div.paginator span.previous:hover a { color: white; }
     div.paginator span.current { border-color: #CC3D33; background-color: #CC3D33; color: white; }
 
 /* =Notification class
   -------------------------------------------------------------- */
-
-.error { padding: .8em; margin-bottom: 1em; border: 2px solid #dddddd; background: #fbe3e4; color: #8a1f11; border-color: #fbc2c4; }
+.error , .notice, .success { padding: .8em; margin-bottom: 1em; border: 2px solid #dddddd; margin:0.4em; -moz-border-radius: 8px; -webkit-border-radius: 8px; -khtml-border-radius: 8px; border-radius: 8px;}
+.error { background: #fbe3e4; color: #8a1f11; border-color: #fbc2c4; }
 .error a { color: #8a1f11; }
 
-.notice { padding: .8em; margin-bottom: 1em; border: 2px solid #dddddd; background: #fff6bf; color: #514721; border-color: #ffd324; }
+.notice { background: #fff6bf; color: #514721; border-color: #ffd324; }
 .notice a { color: #514721; }
 
-.success { padding: .8em; margin-bottom: 1em; border: 2px solid #dddddd; background: #e6efc2; color: #264409; border-color: #c6d880; }
+.success { background: #e6efc2; color: #264409; border-color: #c6d880; }
 .success a { color: #264409; }
 
 .hide { display: none; }
