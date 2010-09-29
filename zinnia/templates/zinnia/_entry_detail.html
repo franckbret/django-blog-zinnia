@@ -50,9 +50,10 @@
 		  <a href="{% url zinnia_tag_detail tag %}" title="Tag {{ tag }}">
 			{{ tag }}
 		  </a>{% if not forloop.last %}, {% endif %}
+		  </li>
 		  {% empty %}
-		  <span>{% trans "No tags" %}</span>
-		</li>{% endfor %}
+		  <li><span>{% trans "No tags" %}</span></li>
+		{% endfor %}
 	  </ul>
 	</dd>
 	<dt class="entry-short-url">{% trans "Short url" %}</dt>
