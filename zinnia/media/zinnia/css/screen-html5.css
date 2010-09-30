@@ -1,3 +1,8 @@
+/*
+  Css for zinnia html5 version released by Franck Bret, http://www.franckbret.com
+  Remixed from original css made by Fantomas42, http://fantomas.willbreak.it/ for Django zinnia blog
+*/
+
 /* =Common elements
   -------------------------------------------------------------- */
 body { line-height: 1.5; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; color: black; font-size: 75%; }
@@ -106,13 +111,14 @@ form { -moz-border-radius: 8px;	-webkit-border-radius: 8px;	-khtml-border-radius
 		form ol li { line-height: 3em; list-style: none; padding: 5px 10px; margin-bottom: 2px; }
 		form ol ol li {	background: none; border: none; float: left; }
 		
-		form label { color:#999; font-weight: bold; font-size: 1.5em; width: 100%; float: left;}
+		form label { color:#999; font-weight: bold; font-size: 1.5em; width: 100%; max-width:100%; float: left;}
 			
 		form fieldset fieldset legend { color: #999; font-size: 1.1em; font-weight: normal; padding-bottom: 0; }
 		form fieldset fieldset label { background:none no-repeat left 50%; width: auto; }
 		form fieldset fieldset label:hover { cursor: pointer; }
 			
-		form input:not([type=radio]), form textarea { -moz-border-radius: 8px; -webkit-border-radius: 8px; -khtml-border-radius: 8px; border-radius: 8px; background: #ffffff; border: solid 2px #eaeaea; outline: none; padding: 5px; width: 98%; }
+		form input:not([type=radio]), form textarea {  background: #ffffff; border: solid 2px #eaeaea; outline: none; padding: 1%; width: 98%; max-width:98%; box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box; -moz-border-radius: 8px; -webkit-border-radius: 8px; -khtml-border-radius: 8px; border-radius: 8px;}
+		/*form input:not([type=radio]), form textarea {  background: #ffffff; border: solid 2px #eaeaea; outline: none; padding: 1%; width: 98%; max-width:98%; }*/
 
         form input:not([type=radio]){ font-size: 1.3em; }
 				
