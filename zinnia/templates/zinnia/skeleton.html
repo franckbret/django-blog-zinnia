@@ -20,7 +20,9 @@
     <!--[if lt IE 8]>
 	<link rel="stylesheet" type="text/css" media="screen, projection" href="{{ ZINNIA_MEDIA_URL }}css/ie.css" />
     <![endif]-->
-	<!--<link rel="stylesheet" type="text/css" media="screen, projection" href="http://html5resetcss.googlecode.com/files/html5reset-1.6.1.css" />-->
+    <!--[if IE 8]>
+	<link rel="stylesheet" type="text/css" media="screen, projection" href="{{ ZINNIA_MEDIA_URL }}css/ie8.css" />
+    <![endif]-->
     {% get_archives_entries "zinnia/tags/archives_entries_link.html" %}
     <link rel="pingback" href="/xmlrpc/" />
     <link rel="EditURI" type="application/rsd+xml" href="{% url zinnia_rsd %}" />
