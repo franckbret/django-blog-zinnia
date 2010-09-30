@@ -21,11 +21,11 @@
 {% endif %}
 
 {% for object in object_list %}
-<div class="entry">
+<article class="hentry">
   {% with object.html_content|truncatewords_html:100|safe as object_content %}
   {% include "zinnia/_entry_detail.html" %}
   {% endwith %}
-</div>
+</article>
 <hr />
 {% empty %}
 <p class="notice">{% trans "Nothing found." %}</p>
