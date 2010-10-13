@@ -1,3 +1,13 @@
+==========================
+Django Blog Zinnia Quintet
+==========================
+This is my html5 version of zinnia that take advantage of new html5 tags and
+other useful css3 techniques.
+This version has some improvments in templates for easiest integration.
+
+Checkout my "quintet" branch to test it
+You can reach me at franckbret@gmail.com
+
 ==================
 Django Blog Zinnia
 ==================
