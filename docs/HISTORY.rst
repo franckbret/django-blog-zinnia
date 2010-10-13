@@ -1,9 +1,16 @@
+0.8
+===
+
+* Using Microformats
+* Mails for comment reply
+
 0.7
 ===
 
 * Using signals
 * Trackback support
 * Ping external urls
+* Private posts
 * Hierarchical categories
 * TinyMCE integration
 * Code optimisation
