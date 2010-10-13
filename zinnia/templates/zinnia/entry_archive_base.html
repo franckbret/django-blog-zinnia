@@ -14,7 +14,6 @@
 {% endblock %}
 
 {% block content %}
-
 {% if category %}
 <h1>{{ category.title }}</h1>
 {% if category.description %}
@@ -31,18 +30,18 @@
 {% endif %}
 
 {% for object in object_list %}
-<article class="hentry">
+<div class="entry span-16 last">
   {% with object.html_content|truncatewords_html:100|safe as object_content %}
   {% include "zinnia/_entry_detail.html" %}
   {% endwith %}
-</article>
-
+</div>
+<hr />
 {% empty %}
   {% trans "No entries yet." %}
 {% endfor %}
 
 {% if is_paginated %}
-<div class="paginator">
+<div class="paginator span-16 last">
   <span class="index">
     {% blocktrans with page_obj.number as current_page and paginator.num_pages as total_page %}Page {{ current_page }} of {{ total_page }}{% endblocktrans %}
   </span>
