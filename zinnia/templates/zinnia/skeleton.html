@@ -26,6 +26,7 @@
     <![endif]-->
 	{% endblock meta-link %}
     {% get_archives_entries "zinnia/tags/archives_entries_link.html" %}
+	<link rel="home" href="{% url zinnia_entry_archive_index %}" />
     <link rel="pingback" href="/xmlrpc/" />
     <link rel="EditURI" type="application/rsd+xml" href="{% url zinnia_rsd %}" />
     <link rel="wlwmanifest" type="application/wlwmanifest+xml" href="{% url zinnia_wlwmanifest %}" />
@@ -76,7 +77,7 @@
 		{% block branding %}
 		<hgroup class="branding">
 		  <h1>
-			<a href="{% url zinnia_entry_archive_index %}" title="Zinnia's Blog">
+			<a href="{% url zinnia_entry_archive_index %}" title="Zinnia's Blog" rel="home">
 			  Zinnia's Blog
 			</a>
 		  </h1>
