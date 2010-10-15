@@ -5,11 +5,20 @@
 
 {% block content %}
 <h2>{% trans "Author list" %}</h2>
+<div>
   <ul>
     {% for object in object_list %}
     <li class="vcard">
+<<<<<<< HEAD
       <a href="{% url zinnia_author_detail object.username %}" title="{{ object.username }}" class="fn nickname url">{{ object.username }}</a>
+=======
+      <a href="{% url zinnia_author_detail object.username %}"
+         title="{{ object.username }}" class="fn nickname url">
+        {{ object.username }}
+      </a>
+>>>>>>> master
     </li>
     {% endfor %}
   </ul>
+</div>
 {% endblock %}

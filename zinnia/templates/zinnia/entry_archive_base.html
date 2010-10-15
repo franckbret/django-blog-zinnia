@@ -14,35 +14,34 @@
 {% endblock %}
 
 {% block content %}
-
 {% if category %}
 <h1>{{ category.title }}</h1>
 {% if category.description %}
 <p>{{ category.description|striptags|safe }}</p>
 {% endif %}
 {% endif %}
- 
+
 {% if tag %}
 <h1>{% trans "Tag" %} : {{ tag }}</h1>
 {% endif %}
- 
+
 {% if author %}
 <h1>{% blocktrans with author.username as author %}Entries by {{ author }}{% endblocktrans %}</h1>
 {% endif %}
 
 {% for object in object_list %}
-<article class="hentry">
+<div id="entry-{{ object.pk }}" class="hentry span-16 last">
   {% with object.html_content|truncatewords_html:100|safe as object_content %}
   {% include "zinnia/_entry_detail.html" %}
   {% endwith %}
-</article>
-
+</div>
+<hr />
 {% empty %}
   {% trans "No entries yet." %}
 {% endfor %}
 
 {% if is_paginated %}
-<div class="paginator">
+<div class="paginator span-16 last">
   <span class="index">
     {% blocktrans with page_obj.number as current_page and paginator.num_pages as total_page %}Page {{ current_page }} of {{ total_page }}{% endblocktrans %}
   </span>
@@ -57,16 +56,16 @@
     {% ifequal page_obj.number page %}
     <strong>{{ page }}</strong>
     {% else %}
-    <a href="?page={{ page }}" 
+    <a href="?page={{ page }}"
        title="{% trans "Entries page" %} {{ page }}">{{ page }}</a>
     {% endifequal%}
   </span>
   {% endfor %}
   {% if page_obj.has_next %}
   <span class="next">
-    <a href="?page={{ page_obj.next_page_number }}" 
+    <a href="?page={{ page_obj.next_page_number }}"
        title="{% trans "More old entries" %}">&raquo;</a>
-  </span>  
+  </span>
   {% endif %}
 </div>
 {% endif %}

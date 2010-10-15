@@ -9,6 +9,10 @@ from django.views.generic.simple import direct_to_template
 
 from zinnia.models import Entry
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> master
 @csrf_exempt
 def entry_trackback(request, slug):
     """Set a TrackBack for an Entry"""    

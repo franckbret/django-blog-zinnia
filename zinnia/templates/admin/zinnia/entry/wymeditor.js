@@ -1,3 +1,5 @@
+{% load i18n %}
+
 $(document).ready(function() {
   $("#id_content").wymeditor({
                    skin: "django", lang: "{{ LANGUAGE_CODE }}",
