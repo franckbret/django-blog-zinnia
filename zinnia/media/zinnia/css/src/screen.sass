@@ -87,16 +87,21 @@ div.paginator
 
 
 // Entry
-.entry
+.hentry
   +entry
-  .entryHeader
+  .entry-header
     :background-color = !box_color
-  .entryFooter
+  .entry-footer
     p    
       strong
         :color = !box_font_color
 
-// Comments
-ol#commentList
+// Discussions
+ol#comment-list, ol#pingback-list, ol#trackback-list
   li
-    float: left
+    :float left
+    &.box2
+      :background-color = !box_color
+    &.post-author
+      :color = !box_font_color
+      

@@ -13,13 +13,16 @@
 {% endblock %}
 
 {% block content %}
-<div class="entry span-16 last">
+<div id="entry-{{ object.pk }}" class="hentry span-16 last">
   {% with object.html_content|safe as object_content %}
   {% include "zinnia/_entry_detail.html" %}
   {% endwith %}
 <<<<<<< HEAD
+<<<<<<< HEAD
 </div>
 =======
+=======
+>>>>>>> dev
   <section id="comments">
 	<h3>{% trans "Comments" %}</h3>
 	{% with object.comments as comment_list %}
@@ -82,24 +85,31 @@
 	  {% endif %}
 	{% endwith %}  
   </section>
+<<<<<<< HEAD
+>>>>>>> dev
+=======
+=======
+</div>
+>>>>>>> master
 >>>>>>> dev
 
 <hr />
 
-<div class="entryWidgets span-16 last">
+<div class="entry-widgets span-16 last">
   {% with object.next_entry as next_entry %}
   {% if next_entry %}
-  <div class="entryNext">
+  <div class="entry-next">
     <h3>{% trans "Next entry" %}</h3>
     <ul>
       <li>
-	<a href="{{ next_entry.get_absolute_url }}" title="{{ next_entry.title }}">
+	<a href="{{ next_entry.get_absolute_url }}" title="{{ next_entry.title }}" rel="next">
 	  {{ next_entry.title }}
 	</a>
       </li>
     </ul>
   </div>
   {% endif %}
+<<<<<<< HEAD
 <<<<<<< HEAD
   {% endwith %}
   {% with object.previous_entry as previous_entry %}
@@ -123,6 +133,8 @@
       {% for entry in object.related_published_set %}
       <li>
 =======
+=======
+>>>>>>> dev
   <br />
   <hr />
     <section class="inner-links" role="complementary">
@@ -149,15 +161,55 @@
 	<ul>
 	  {% for entry in object.related_published_set %}
 	  <li>
+<<<<<<< HEAD
+>>>>>>> dev
+=======
 >>>>>>> dev
 	<a href="{{ entry.get_absolute_url }}" title="{{ entry.title }}">{{ entry.title }}</a>
+	  </li>
+	  {% endfor %}
+	</ul>
+  </section>
+  {% endif %}
+  <section class="entry-similar">
+	<h3>{% trans "Similar entries" %}</h3>
+	{% get_similar_entries 5 %}
+  </section>
+</article>
+=======
+  {% endwith %}
+  {% with object.previous_entry as previous_entry %}
+  {% if previous_entry %}
+  <div class="entry-previous">
+    <h3>{% trans "Previous entry" %}</h3>
+    <ul>
+      <li>
+	<a href="{{ previous_entry.get_absolute_url }}" title="{{ previous_entry.title }}" rel="prev">
+	  {{ previous_entry.title }}
+	</a>
+      </li>
+    </ul>
+  </div>
+  {% endif %}
+  {% endwith %}
+  {% if object.related_published_set %}
+  <div class="entry-related">
+    <h3>{% trans "Related entries" %}</h3>
+    <ul>
+      {% for entry in object.related_published_set %}
+      <li>
+	<a href="{{ entry.get_absolute_url }}" title="{{ entry.title }}" rel="bookmark">{{ entry.title }}</a>
       </li>
       {% endfor %}
     </ul>
   </div>
   {% endif %}
 <<<<<<< HEAD
+<<<<<<< HEAD
   <div class="entrySimilar">
+=======
+  <div class="entry-similar">
+>>>>>>> dev
     <h3>{% trans "Similar entries" %}</h3>
     {% get_similar_entries 5 %}
   </div>
@@ -169,16 +221,16 @@
   <h3>{% trans "Comments" %}</h3>
   {% with object.comments as comment_list %}
   {% if comment_list.count %}
-  <ol id="commentList" class="span-15 last">
+  <ol id="comment-list" class="span-15 last">
     {% for comment in comment_list %}
-    <li id="comment_{{ comment.pk }}" class="comment {% cycle box1,box2 %} span-15 last">
+    <li id="comment_{{ comment.pk }}" class="comment vcard {% cycle box1,box2 %}{% if comment.user in object.authors.all %} post-author{% endif %} span-15 last">
       <div class="span-2">
-	<img src="{% get_gravatar comment.email 60 "G" %}" class="gravatar" alt="{{ comment.user_name }}"/>
+	<img src="{% get_gravatar comment.email 60 "G" %}" class="gravatar photo" alt="{{ comment.user_name }}"/>
       </div>
       <div class="comment_body span-13 last">
 	<div class="span-13 last">
 	  {% if comment.url %}
-	  <a href="{{ comment.url }}">{{ comment.user_name }}</a>
+	  <a href="{{ comment.url }}" class="fn url">{{ comment.user_name }}</a>
 	  {% else %}
 	  {{ comment.user_name }}
 	  {% endif %}
@@ -211,15 +263,15 @@
   <h3>{% trans "Pingbacks" %}</h3>
   {% with object.pingbacks as pingback_list %}
   {% if pingback_list.count %}
-  <ol id="pingbackList" class="span-16 last">
+  <ol id="pingback-list" class="span-15 last">
     {% for pingback in pingback_list %}
-    <li id="pingback_{{ pingback.pk }}" class="pingback {% cycle box1,box2 %} span-16 last">
-      <div class="pingback_body span-16 last">
-	<div class="span-16 last">
+    <li id="pingback_{{ pingback.pk }}" class="pingback {% cycle box1,box2 %} span-15 last">
+      <div class="pingback_body span-15 last">
+	<div class="span-15 last">
 	  <a href="{{ pingback.url }}">{{ pingback.user_name }}</a>
 	  {% trans "on date" %} {{ pingback.submit_date|date:"l d F Y" }}
 	</div>
-	<div class="span-16 last">
+	<div class="span-15 last">
 	  <cite>
 	    {{ pingback.comment }}
 	  </cite>
@@ -234,7 +286,7 @@
     {% else %}
   <p>{% trans "Pingbacks are closed." %}</p>
     {% endif %}
-  {% endwith %}  
+  {% endwith %}
 </div>
 
 <hr />
@@ -242,15 +294,15 @@
   <h3>{% trans "Trackbacks" %}</h3>
   {% with object.trackbacks as trackback_list %}
   {% if trackback_list.count %}
-  <ol id="trackbackList" class="span-16 last">
+  <ol id="trackback-list" class="span-15 last">
     {% for trackback in trackback_list %}
-    <li id="trackback_{{ trackback.pk }}" class="trackback {% cycle box1,box2 %} span-16 last">
-      <div class="trackback_body span-16 last">
-	<div class="span-16 last">
+    <li id="trackback_{{ trackback.pk }}" class="trackback {% cycle box1,box2 %} span-15 last">
+      <div class="trackback_body span-15 last">
+	<div class="span-15 last">
 	  <a href="{{ trackback.url }}">{{ trackback.user_name }}</a>
 	  {% trans "on date" %} {{ trackback.submit_date|date:"l d F Y" }}
 	</div>
-	<div class="span-16 last">
+	<div class="span-15 last">
 	  <cite>
 	    {{ trackback.comment }}
 	  </cite>
@@ -263,7 +315,7 @@
     {% if object.pingback_enabled %}
   <p><a href="{% url zinnia_entry_trackback object.slug %}" rel="trackback">{% trans "Trackback URL" %}</a></p>
     {% endif %}
-  {% endwith %}  
+  {% endwith %}
 </div>
 
 {% if object.comment_enabled %}
@@ -272,11 +324,15 @@
 </div>
 {% endif %}
 
+<<<<<<< HEAD
 =======
   <section class="entry-similar">
 	<h3>{% trans "Similar entries" %}</h3>
 	{% get_similar_entries 5 %}
   </section>
 </article>
+>>>>>>> dev
+=======
+>>>>>>> master
 >>>>>>> dev
 {% endblock %}
