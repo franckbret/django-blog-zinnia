@@ -17,7 +17,72 @@
   {% with object.html_content|safe as object_content %}
   {% include "zinnia/_entry_detail.html" %}
   {% endwith %}
+<<<<<<< HEAD
 </div>
+=======
+  <section id="comments">
+	<h3>{% trans "Comments" %}</h3>
+	{% with object.comments as comment_list %}
+	{% if comment_list.count %}
+	<ol class="comment-list">
+	  {% for comment in comment_list %}
+	  <li id="comment-{{ comment.pk }}" class="comment vcard {% cycle box1,box2 %} {% if comment.user in object.authors.all %}author-post {% endif %}">
+		<span class="meta vcard">
+		  {% if comment.url %}
+		  <a href="{{ comment.url }}" title="{% blocktrans with comment.user_name as user_name %}Visit {{ user_name }} website{% endblocktrans %}" class="fn url">{{ comment.user_name }}</a>
+		  {% else %}
+		  <span class="fn">{{ comment.user_name }}</span>
+		  {% endif %}
+		  <time datetime="{{ object.creation_date|date:"c" }}" pubdate="pubdate" class="comment-date"> {% trans "says on" %} {{ comment.submit_date|date:"D d F Y H:i"|capfirst }}</time>
+		  <img src="{% get_gravatar comment.email 60 "G" %}" class="gravatar photo" alt="{{ comment.user_name }}" />
+		</span>
+		<div class="comment-body">
+		  <cite>
+			{{ comment.comment }}
+		  </cite>
+		</div>
+	  </li>
+	  {% endfor %}
+	</ol>
+	  {% if not object.comment_enabled %}
+	<p>{% trans "Comments are closed." %}</p>
+	  {% endif %}
+	{% else %}
+	  {% if object.comment_enabled %}
+	<p>{% trans "No comments yet." %}</p>
+	  {% else %}
+	<p>{% trans "Comments are closed." %}</p>
+	  {% endif %}
+	{% endif %}
+	{% endwith %}
+  </section>
+  
+  <section id="pingbacks">
+	<h3>{% trans "Pingbacks" %}</h3>
+	{% with object.pingbacks as pingback_list %}
+	{% if pingback_list.count %}
+	<ol class="pingback-list">
+	  {% for pingback in pingback_list %}
+	  <li id="pingback-{{ pingback.pk }}" class="pingback {% cycle box1,box2 %}">
+		<div class="pingback-body">
+		  <a href="{{ pingback.url }}">{{ pingback.user_name }}</a>
+		  {% trans "on date" %} {{ pingback.submit_date|date:"l d F Y" }}
+		  <cite>
+			{{ pingback.comment }}
+		  </cite>
+		</div>
+	  </li>
+	  {% endfor %}
+	</ol>
+	{% endif %}
+	  {% if object.pingback_enabled %}
+	<p>{% trans "Pingbacks are open." %}</p>
+	  {% else %}
+	<p>{% trans "Pingbacks are closed." %}</p>
+	  {% endif %}
+	{% endwith %}  
+  </section>
+>>>>>>> dev
 
 <hr />
 
@@ -35,6 +100,7 @@
     </ul>
   </div>
   {% endif %}
+<<<<<<< HEAD
   {% endwith %}
   {% with object.previous_entry as previous_entry %}
   {% if previous_entry %}
@@ -56,12 +122,41 @@
     <ul>
       {% for entry in object.related_published_set %}
       <li>
+=======
+  <br />
+  <hr />
+    <section class="inner-links" role="complementary">
+	<nav class="previous-next">
+	  {% with object.previous_entry as previous_entry %}
+	  {% if previous_entry %}
+		<a href="{{ previous_entry.get_absolute_url }}" title="{{ previous_entry.title }}" class="entry-previous" rel="next">
+		  {{ previous_entry.title }} 
+		</a>
+	  {% endif %}
+	  {% endwith %}
+	  {% with object.next_entry as next_entry %}
+	  {% if next_entry %}
+		<a href="{{ next_entry.get_absolute_url }}" title="{{ next_entry.title }}" class="entry-next" rel="prev">
+		  {{ next_entry.title }}
+		</a>
+	  {% endif %}
+	  {% endwith %}
+	</nav>
+  </section>
+	{% if object.related_published_set %}
+  <section class="entry-related">
+	<h3>{% trans "Related entries" %}</h3>
+	<ul>
+	  {% for entry in object.related_published_set %}
+	  <li>
+>>>>>>> dev
 	<a href="{{ entry.get_absolute_url }}" title="{{ entry.title }}">{{ entry.title }}</a>
       </li>
       {% endfor %}
     </ul>
   </div>
   {% endif %}
+<<<<<<< HEAD
   <div class="entrySimilar">
     <h3>{% trans "Similar entries" %}</h3>
     {% get_similar_entries 5 %}
@@ -177,4 +272,11 @@
 </div>
 {% endif %}
 
+=======
+  <section class="entry-similar">
+	<h3>{% trans "Similar entries" %}</h3>
+	{% get_similar_entries 5 %}
+  </section>
+</article>
+>>>>>>> dev
 {% endblock %}
