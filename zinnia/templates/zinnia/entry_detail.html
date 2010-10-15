@@ -115,14 +115,14 @@
 	<nav class="previous-next">
 	  {% with object.previous_entry as previous_entry %}
 	  {% if previous_entry %}
-		<a href="{{ previous_entry.get_absolute_url }}" title="{{ previous_entry.title }}" class="previous-entry" rel="next">
+		<a href="{{ previous_entry.get_absolute_url }}" title="{{ previous_entry.title }}" class="entry-previous" rel="next">
 		  {{ previous_entry.title }} 
 		</a>
 	  {% endif %}
 	  {% endwith %}
 	  {% with object.next_entry as next_entry %}
 	  {% if next_entry %}
-		<a href="{{ next_entry.get_absolute_url }}" title="{{ next_entry.title }}" class="next-entry" rel="prev">
+		<a href="{{ next_entry.get_absolute_url }}" title="{{ next_entry.title }}" class="entry-next" rel="prev">
 		  {{ next_entry.title }}
 		</a>
 	  {% endif %}
@@ -130,7 +130,7 @@
 	</nav>
   </section>
 	{% if object.related_published_set %}
-  <section class="related-entry">
+  <section class="entry-related">
 	<h3>{% trans "Related entries" %}</h3>
 	<ul>
 	  {% for entry in object.related_published_set %}
@@ -141,7 +141,7 @@
 	</ul>
   </section>
   {% endif %}
-  <section class="similar-entry">
+  <section class="entry-similar">
 	<h3>{% trans "Similar entries" %}</h3>
 	{% get_similar_entries 5 %}
   </section>

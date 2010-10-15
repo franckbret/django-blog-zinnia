@@ -9,7 +9,7 @@
 	<dt>{% trans "Written by" %} </dt>
 	<dd>
 	  <ul>{% for author in object.authors.all %}
-		<li class="vcard">
+		<li class="vcard author">
 		  <a href="{% url zinnia_author_detail author %}" title="{% blocktrans with author as author %}Show {{ author }} entries{% endblocktrans %}" class="author fn nickname url">
 			<strong class="fn nickname">{{ author }}</strong>
 		  </a>{% if not forloop.last %}, {% endif %}
@@ -17,7 +17,7 @@
 	  </ul>
 	</dd>
 	<dt>{% trans "Created on" %}</dt>
-	<dd><time datetime="{{ object.creation_date|date:"c" }}" pubdate="pubdate" class="entry-date">{{ object.creation_date|date:"D d F Y"|capfirst }}</time></dd>
+	<dd><time datetime="{{ object.creation_date|date:"c" }}" pubdate="pubdate" class="entry-date published">{{ object.creation_date|date:"D d F Y"|capfirst }}</time></dd>
 	<dt class="entry-category">{% trans "Category" %}</dt>
 	<dd>
 	  <ul>{% for category in object.categories.all %}
@@ -31,7 +31,7 @@
   </dl>
 </header>
 {% if object.image %}
-<figure>
+<figure class="entry-image">
   <a href="{{ object.get_absolute_url }}" title="{{ object.title }}">
 	<img src="{{ object.image.url }}" alt="{{ object.title }}" />
   </a>
