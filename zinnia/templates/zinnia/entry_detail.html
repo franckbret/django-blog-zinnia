@@ -13,10 +13,11 @@
 {% endblock %}
 
 {% block content %}
-<div id="entry-{{ object.pk }}" class="hentry span-16 last">
+<article class="hentry">
   {% with object.html_content|safe as object_content %}
   {% include "zinnia/_entry_detail.html" %}
   {% endwith %}
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 </div>
@@ -138,6 +139,9 @@
   <br />
   <hr />
     <section class="inner-links" role="complementary">
+=======
+  <section class="inner-links" role="complementary">
+>>>>>>> dev
 	<nav class="previous-next">
 	  {% with object.previous_entry as previous_entry %}
 	  {% if previous_entry %}
@@ -176,6 +180,7 @@
 	{% get_similar_entries 5 %}
   </section>
 </article>
+<<<<<<< HEAD
 =======
   {% endwith %}
   {% with object.previous_entry as previous_entry %}
@@ -334,5 +339,7 @@
 >>>>>>> dev
 =======
 >>>>>>> master
+>>>>>>> dev
+=======
 >>>>>>> dev
 {% endblock %}

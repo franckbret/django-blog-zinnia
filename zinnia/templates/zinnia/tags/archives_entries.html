@@ -4,6 +4,7 @@
   <li>
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     <a title="{% trans "Archives" %} {{ date|date:"F Y"|capfirst }}" href="{% url zinnia_entry_archive_month date|date:"Y" date|date:"m" %}">
       {{ date|date:"F Y"|capfirst }}
 =======
@@ -18,6 +19,10 @@
        href="{% url zinnia_entry_archive_month date|date:"Y" date|date:"m" %}">
       {{ date|date:"F Y"|capfirst }}
 >>>>>>> master
+>>>>>>> dev
+=======
+    <a title="{% trans "Archives" %} {{ date|date:"F Y"|capfirst }}" href="{% url zinnia_entry_archive_month date|date:"Y" date|date:"m" %}" rel="archives">
+      <time datetime="{{ date|date:"c" }}" pubdate="pubdate" class="entry-date">{{ date|date:"F Y"|capfirst }}</time>
 >>>>>>> dev
     </a>
   </li>
