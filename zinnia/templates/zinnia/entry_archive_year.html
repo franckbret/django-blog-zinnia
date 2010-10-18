@@ -9,12 +9,7 @@
   {% for date in date_list %}
   <li>
     <a href="{% url zinnia_entry_archive_month year date|date:"m" %}" rel="archives">{{ date|date:"F"|capfirst }}</a>
-<<<<<<< HEAD
-  </li>  
-  {% endfor %}  
-=======
   </li>
   {% endfor %}
->>>>>>> master
 </ul>
 {% endblock %}
