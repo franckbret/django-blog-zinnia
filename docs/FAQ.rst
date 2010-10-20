@@ -7,6 +7,12 @@ Frequently Asked Questions
     as generic as possible. But you can easily change them by
     `specifying a template directory
     <http://docs.djangoproject.com/en/dev/ref/templates/api/#loading-templates>`_.
+    
+    You can also create your own app with zinnia templates inheritance. You can
+    find here an app example with html5 templates skins for zinnia wich can be a
+    good starting point for making your own.
+    `Django Blog Quintet
+    <http://github.com/franckbret/django-blog-quintet>`_.
 
 
 * How can I use the image field for fitting to my skin ?
