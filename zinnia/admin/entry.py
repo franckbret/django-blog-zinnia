@@ -12,6 +12,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse, NoReverseMatch
 
 from tagging.models import Tag
+from cms.admin.placeholderadmin import PlaceholderAdmin
 
 from zinnia import settings
 from zinnia.managers import HIDDEN
@@ -20,12 +21,13 @@ from zinnia.ping import DirectoryPinger
 from zinnia.admin.forms import EntryAdminForm
 
 
-class EntryAdmin(admin.ModelAdmin):
+class EntryAdmin(PlaceholderAdmin):
     """Admin for Entry model"""
     form = EntryAdminForm
     date_hierarchy = 'creation_date'
-    fieldsets = ((_('Content'), {'fields': ('title', 'content',
-                                            'image', 'status')}),
+    fieldsets = ((_('Content'), {'fields': ('title', 'image', 'status')}),
+                 (None, {'fields': ('content',),
+                         'classes': ('plugin-holder', 'plugin-holder-nopage')}),
                  (_('Options'), {'fields': ('excerpt', 'template', 'related',
                                             'authors', 'creation_date',
                                             'start_publication',
@@ -164,16 +166,16 @@ class EntryAdmin(admin.ModelAdmin):
             return queryset
         return request.user.entry_set.all()
 
-    def formfield_for_manytomany(self, db_field, request, **kwargs):
-        """Filters the disposable authors"""
-        if db_field.name == 'authors':
-            if request.user.has_perm('zinnia.can_change_author'):
-                kwargs['queryset'] = User.objects.filter(is_staff=True)
-            else:
-                kwargs['queryset'] = User.objects.filter(pk=request.user.pk)
+#     def formfield_for_manytomany(self, db_field, request, **kwargs):
+#         """Filters the disposable authors"""
+#         if db_field.name == 'authors':
+#             if request.user.has_perm('zinnia.can_change_author'):
+#                 kwargs['queryset'] = User.objects.filter(is_staff=True)
+#             else:
+#                 kwargs['queryset'] = User.objects.filter(pk=request.user.pk)
 
-        return super(EntryAdmin, self).formfield_for_manytomany(
-            db_field, request, **kwargs)
+#         return super(EntryAdmin, self).formfield_for_manytomany(
+#            db_field, request, **kwargs)
 
     def get_actions(self, request):
         """Define user actions by permissions"""
@@ -250,34 +252,34 @@ class EntryAdmin(admin.ModelAdmin):
     ping_directories.short_description = _('Ping Directories for ' \
                                            'selected entries')
 
-    def get_urls(self):
-        entry_admin_urls = super(EntryAdmin, self).get_urls()
-        urls = patterns('django.views.generic.simple',
-                        url(r'^autocomplete_tags/$', 'direct_to_template',
-                            {'template': 'admin/zinnia/entry/autocomplete_tags.js',
-                             'mimetype': 'application/javascript'},
-                            name='zinnia_entry_autocomplete_tags'),
-                        url(r'^wymeditor/$', 'direct_to_template',
-                            {'template': 'admin/zinnia/entry/wymeditor.js',
-                             'mimetype': 'application/javascript'},
-                            name='zinnia_entry_wymeditor'),)
-        return urls + entry_admin_urls
+#     def get_urls(self):
+#         entry_admin_urls = super(EntryAdmin, self).get_urls()
+#         urls = patterns('django.views.generic.simple',
+#                         url(r'^autocomplete_tags/$', 'direct_to_template',
+#                             {'template': 'admin/zinnia/entry/autocomplete_tags.js',
+#                              'mimetype': 'application/javascript'},
+#                             name='zinnia_entry_autocomplete_tags'),
+#                         url(r'^wymeditor/$', 'direct_to_template',
+#                             {'template': 'admin/zinnia/entry/wymeditor.js',
+#                              'mimetype': 'application/javascript'},
+#                             name='zinnia_entry_wymeditor'),)
+#         return urls + entry_admin_urls
 
-    def _media(self):
-        MEDIA_URL = settings.MEDIA_URL
-        media = super(EntryAdmin, self).media + \
-                Media(css={'all': ('%scss/jquery.autocomplete.css' % MEDIA_URL,)},
-                      js=('%sjs/jquery.js' % MEDIA_URL,
-                          '%sjs/jquery.bgiframe.js' % MEDIA_URL,
-                          '%sjs/jquery.autocomplete.js' % MEDIA_URL,
-                          reverse('admin:zinnia_entry_autocomplete_tags'),))
+#     def _media(self):
+#         MEDIA_URL = settings.MEDIA_URL
+#         media = super(EntryAdmin, self).media + \
+#                 Media(css={'all': ('%scss/jquery.autocomplete.css' % MEDIA_URL,)},
+#                       js=('%sjs/jquery.js' % MEDIA_URL,
+#                           '%sjs/jquery.bgiframe.js' % MEDIA_URL,
+#                           '%sjs/jquery.autocomplete.js' % MEDIA_URL,
+#                           reverse('admin:zinnia_entry_autocomplete_tags'),))
 
-        if settings.WYSIWYG == 'wymeditor':
-            media += Media(js=('%sjs/wymeditor/jquery.wymeditor.pack.js' % MEDIA_URL,
-                               reverse('admin:zinnia_entry_wymeditor')))
-        elif settings.WYSIWYG == 'tinymce':
-            from tinymce.widgets import TinyMCE
-            media += TinyMCE().media + Media(
-                js=(reverse('tinymce-js', args=('admin/zinnia/entry',)),))
-        return media
-    media = property(_media)
+#         if settings.WYSIWYG == 'wymeditor':
+#             media += Media(js=('%sjs/wymeditor/jquery.wymeditor.pack.js' % MEDIA_URL,
+#                                reverse('admin:zinnia_entry_wymeditor')))
+#         elif settings.WYSIWYG == 'tinymce':
+#             from tinymce.widgets import TinyMCE
+#             media += TinyMCE().media + Media(
+#                 js=(reverse('tinymce-js', args=('admin/zinnia/entry',)),))
+#         return media
+#     media = property(_media)

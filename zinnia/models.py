@@ -16,6 +16,7 @@ try:
 except ImportError:
     MPTTModel = models.Model
 from tagging.fields import TagField
+from cms.models.fields import PlaceholderField
 
 from zinnia.settings import USE_BITLY
 from zinnia.settings import UPLOAD_TO
@@ -80,7 +81,8 @@ class Entry(models.Model):
 
     image = models.ImageField(_('image'), upload_to=UPLOAD_TO,
                               blank=True, help_text=_('used for illustration'))
-    content = models.TextField(_('content'))
+    #content = models.TextField(_('content'))
+    content = PlaceholderField('content')
     excerpt = models.TextField(_('excerpt'), blank=True,
                                 help_text=_('optional element'))
 
@@ -128,9 +130,10 @@ class Entry(models.Model):
     @property
     def html_content(self):
         """Return the content correctly formatted"""
-        if not '</p>' in self.content:
-            return linebreaks(self.content)
-        return self.content
+        return 'No content'
+        #if not '</p>' in self.content:
+        #    return linebreaks(self.content)
+        #return self.content
 
     @property
     def previous_entry(self):

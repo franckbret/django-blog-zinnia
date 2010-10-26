@@ -1,4 +1,4 @@
-{% load tagging_tags comments i18n %}
+{% load tagging_tags comments i18n placeholder_tags %}
 
 <div class="entry-header span-16 last">
   <h2 class="entry-title">
@@ -41,7 +41,7 @@
   </div>
   {% endif %}
   <div class="entry-content">
-    {{ object_content }}
+    {% render_placeholder object.content "640" %}
   </div>
 </div>
 
