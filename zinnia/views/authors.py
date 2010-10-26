@@ -1,4 +1,4 @@
-"""Views for zinnia authors"""
+"""Views for Zinnia authors"""
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from django.views.generic.list_detail import object_list
@@ -10,6 +10,7 @@ from zinnia.views.decorators import update_queryset
 
 
 author_list = update_queryset(object_list, authors_published)
+
 
 def author_detail(request, username, page=None):
     """Display the entries of an author"""

@@ -84,7 +84,6 @@ class Command(LabelCommand):
 
         self.import_entries(tree.findall('channel/item'))
 
-
     def import_authors(self, tree):
         """Retrieve all the authors used in posts
         and convert it to new or existing user, and
@@ -167,7 +166,7 @@ class Command(LabelCommand):
         for tag_node in tag_nodes:
             tag_name = tag_node.find('{http://wordpress.org/export/1.0/}tag_slug').text[:50]
             self.write_out('> %s... ' % tag_name)
-            tag, created = Tag.objects.get_or_create(name=tag_name)
+            Tag.objects.get_or_create(name=tag_name)
             self.write_out(self.style.ITEM('OK\n'))
 
     def get_entry_tags(self, categories):
@@ -220,7 +219,7 @@ class Command(LabelCommand):
                       'login_required': item_node.find('{http://wordpress.org/export/1.0/}status').text == 'private',
                       'creation_date': creation_date,
                       'last_update': datetime.now(),
-                      'start_publication': creation_date,}
+                      'start_publication': creation_date}
 
         entry, created = Entry.objects.get_or_create(title=title,
                                                      defaults=entry_dict)

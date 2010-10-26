@@ -1,11 +1,15 @@
+CHANGELOG
+=========
+
 0.8
-===
+---
 
 * Using Microformats
 * Mails for comment reply
+* Zinnia to Wordpress utility command
 
 0.7
-===
+---
 
 * Using signals
 * Trackback support
@@ -17,7 +21,7 @@
 * And a lot of bug fixes
 
 0.6
-===
+---
 
 * Handling PingBacks
 * Support MetaWeblog API
@@ -29,7 +33,7 @@
 * And a lot of bug fixes
 
 0.5
-===
+---
 
 * Packaging
 * Tests added
@@ -41,7 +45,7 @@
 * Publishing sources on Github.com
 
 0.4 and before
-==============
+--------------
 
 * The previous versions of Zinnia were not packaged, and were destinated for a
   personnal use. 

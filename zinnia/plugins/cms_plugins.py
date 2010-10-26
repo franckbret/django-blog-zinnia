@@ -1,4 +1,6 @@
 """Plugins for CMS"""
+import itertools
+
 from django.utils.translation import ugettext as _
 
 from tagging.models import TaggedItem
@@ -6,25 +8,48 @@ from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
 
 from zinnia.models import Entry
-from zinnia.models import Category
 from zinnia.managers import tags_published
 from zinnia.managers import authors_published
 from zinnia.plugins.models import LatestEntriesPlugin
 from zinnia.plugins.models import SelectedEntriesPlugin
 from zinnia.settings import MEDIA_URL
 
+
 class CMSLatestEntriesPlugin(CMSPluginBase):
+    """Django-cms plugin for the latest entries filtered"""
     module = _('entries')
     model = LatestEntriesPlugin
     name = _('Latest entries')
     render_template = 'zinnia/cms/entry_list.html'
     filter_horizontal = ['categories', 'authors', 'tags']
-    fieldsets = ((None, {'fields': ('number_of_entries', 'template_to_render')}),
-                 (_('Sorting'), {'fields': ('categories', 'authors', 'tags'),
-                                 'classes': ('collapse',)}),)
+    fieldsets = (
+        (None, {
+            'fields': (
+                'number_of_entries',
+                'template_to_render'
+            )
+        }),
+        (_('Sorting'), {
+            'fields': (
+                'categories',
+                'authors',
+                'tags'
+            ),
+            'classes': (
+                'collapse',
+            )
+        }),
+        (_('Advanced'), {
+            'fields': (
+                'subcategories',
+            ),
+        }),
+    )
+
     text_enabled = True
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
+        """Filtering manytomany field"""
         if db_field.name == 'authors':
             kwargs['queryset'] = authors_published()
         if db_field.name == 'tags':
@@ -33,10 +58,17 @@ class CMSLatestEntriesPlugin(CMSPluginBase):
             db_field, request, **kwargs)
 
     def render(self, context, instance, placeholder):
+        """Update the context with plugin's data"""
         entries = Entry.published.all()
 
         if instance.categories.count():
-            entries = entries.filter(categories__in=instance.categories.all())
+            cats = instance.categories.all()
+
+            if instance.subcategories:
+                cats = itertools.chain(cats, *[c.get_descendants()
+                                               for c in cats])
+
+            entries = entries.filter(categories__in=cats)
         if instance.authors.count():
             entries = entries.filter(authors__in=instance.authors.all())
         if instance.tags.count():
@@ -50,9 +82,12 @@ class CMSLatestEntriesPlugin(CMSPluginBase):
         return context
 
     def icon_src(self, instance):
+        """Icon source of the plugin"""
         return MEDIA_URL + u'img/plugin.png'
 
+
 class CMSSelectedEntriesPlugin(CMSPluginBase):
+    """Django-cms plugin for a selection of entries"""
     module = _('entries')
     model = SelectedEntriesPlugin
     name = _('Selected entries')
@@ -62,12 +97,14 @@ class CMSSelectedEntriesPlugin(CMSPluginBase):
     text_enabled = True
 
     def render(self, context, instance, placeholder):
+        """Update the context with plugin's data"""
         context.update({'entries': instance.entries.all(),
                         'object': instance,
                         'placeholder': placeholder})
         return context
 
     def icon_src(self, instance):
+        """Icon source of the plugin"""
         return MEDIA_URL + u'img/plugin.png'
 
 plugin_pool.register_plugin(CMSLatestEntriesPlugin)

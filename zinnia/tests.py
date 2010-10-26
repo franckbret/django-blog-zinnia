@@ -18,19 +18,31 @@ from django.template import Context
 from django.template import TemplateDoesNotExist
 
 from tagging.models import Tag
+from BeautifulSoup import BeautifulSoup
+
 from zinnia.models import Entry
 from zinnia.models import Category
+from zinnia.ping import SITE
 from zinnia.ping import ExternalUrlsPinger
-from zinnia.managers import DRAFT, HIDDEN, PUBLISHED
+from zinnia.managers import DRAFT, PUBLISHED
 from zinnia.managers import tags_published
 from zinnia.managers import entries_published
 from zinnia.managers import authors_published
-from zinnia.templatetags.zinnia_tags import *
 from zinnia.xmlrpc.metaweblog import authenticate
 from zinnia.xmlrpc.metaweblog import post_structure
-from zinnia.xmlrpc.metaweblog import category_structure
 from zinnia.xmlrpc.pingback import generate_pingback_content
-from BeautifulSoup import BeautifulSoup
+from zinnia.templatetags.zinnia_tags import get_gravatar
+from zinnia.templatetags.zinnia_tags import get_categories
+from zinnia.templatetags.zinnia_tags import get_recent_entries
+from zinnia.templatetags.zinnia_tags import get_random_entries
+from zinnia.templatetags.zinnia_tags import zinnia_breadcrumbs
+from zinnia.templatetags.zinnia_tags import get_popular_entries
+from zinnia.templatetags.zinnia_tags import get_similar_entries
+from zinnia.templatetags.zinnia_tags import get_recent_comments
+from zinnia.templatetags.zinnia_tags import get_calendar_entries
+from zinnia.templatetags.zinnia_tags import get_archives_entries
+from zinnia.templatetags.zinnia_tags import get_archives_entries_tree
+
 
 class ManagersTestCase(TestCase):
 
@@ -241,6 +253,9 @@ class EntryTestCase(TestCase):
         self.assertEquals(self.entry.pingbacks.count(), 1)
         self.assertEquals(self.entry.trackbacks.count(), 1)
 
+    def test_str(self):
+        self.assertEquals(str(self.entry), 'My entry: draft')
+
     def test_word_count(self):
         self.assertEquals(self.entry.word_count, 2)
 
@@ -373,13 +388,14 @@ class CategoryTestCase(TestCase):
         self.categories[1].save()
         self.assertEqual(self.categories[1].tree_path, 'category-1/category-2')
 
+
 class ZinniaViewsTestCase(TestCase):
     """Test cases for generic views used in the application,
     for reproducing and correcting issue :
     http://github.com/Fantomas42/django-blog-zinnia/issues#issue/3
     """
     urls = 'zinnia.urls.tests'
-    fixtures = ['zinnia_test_data.json',]
+    fixtures = ['zinnia_test_data.json']
 
     def create_published_entry(self):
         params = {'title': 'My test entry',
@@ -427,9 +443,12 @@ class ZinniaViewsTestCase(TestCase):
             response = self.client.get('/2010/01/01/my-test-entry/')
             self.assertEquals(response.status_code, 404)
 
+        entry.template = 'zinnia/_entry_detail.html'
+        entry.save()
         entry.sites.add(Site.objects.get_current())
         response = self.client.get('/2010/01/01/my-test-entry/')
         self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'zinnia/_entry_detail.html')
 
     def test_zinnia_entry_channel(self):
         self.check_publishing_context('/channel-test/', 2, 3)
@@ -466,6 +485,12 @@ class ZinniaViewsTestCase(TestCase):
 
     def test_zinnia_entry_search(self):
         self.check_publishing_context('/search/?pattern=test', 2, 3)
+        response = self.client.get('/search/?pattern=ab')
+        self.assertEquals(len(response.context['object_list']), 0)
+        self.assertEquals(response.context['error'], 'The pattern is too short')
+        response = self.client.get('/search/')
+        self.assertEquals(len(response.context['object_list']), 0)
+        self.assertEquals(response.context['error'], 'No pattern to search found')
 
     def test_zinnia_sitemap(self):
         response = self.client.get('/sitemap/')
@@ -501,6 +526,7 @@ class ZinniaViewsTestCase(TestCase):
         self.assertEquals(self.client.post('/trackback/test-1/', {'url': 'http://example.com'}).content,
                           '<?xml version="1.0" encoding="utf-8"?>\n<response>\n  \n  <error>1</error>\n  '
                           '<message>Trackback is already registered</message>\n  \n</response>\n')
+
 
 class TestTransport(Transport):
     """Handles connections to XML-RPC server
@@ -670,6 +696,7 @@ class PingBackTestCase(TestCase):
         response = self.server.pingback.extensions.getPingbacks(target)
         self.assertEquals(response, ['http://localhost:8000/2010/01/01/my-second-entry/',
                                      'http://example.com/blog/1/'])
+
 
 class MetaWeblogTestCase(TestCase):
     """Test cases for MetaWeblog"""
@@ -845,11 +872,11 @@ class MetaWeblogTestCase(TestCase):
                           1, 'contributor', 'password', post, 1)
         self.assertEquals(Entry.objects.count(), 2)
         self.assertEquals(Entry.published.count(), 1)
-        new_post_id = self.server.metaWeblog.newPost(
+        self.server.metaWeblog.newPost(
             1, 'webmaster', 'password', post, 1)
         self.assertEquals(Entry.objects.count(), 3)
         self.assertEquals(Entry.published.count(), 2)
-        new_post_id = self.server.metaWeblog.newPost(
+        self.server.metaWeblog.newPost(
             1, 'webmaster', 'password', post, 0)
         self.assertEquals(Entry.objects.count(), 4)
         self.assertEquals(Entry.published.count(), 2)
@@ -878,7 +905,7 @@ class MetaWeblogTestCase(TestCase):
         entry.title = 'Title edited'
         entry.creation_date = datetime(2000, 1, 1)
         post = post_structure(entry, self.site)
-        post['categories'] =  ''
+        post['categories'] = ''
         post['description'] = 'Content edited'
         post['mt_excerpt'] = 'Content edited'
         post['wp_slug'] = 'slug-edited'
@@ -904,6 +931,7 @@ class MetaWeblogTestCase(TestCase):
         self.assertEquals(entry.authors.all()[0], self.contributor)
         self.assertEquals(entry.creation_date, datetime(2000, 1, 1))
 
+
 class ExternalUrlsPingerTestCase(TestCase):
     """Test cases for ExternalUrlsPinger"""
 
@@ -922,7 +950,7 @@ class ExternalUrlsPingerTestCase(TestCase):
                                                       'http://google.com/titi/'), True)
         self.assertEquals(self.pinger.is_external_url('http://example.com/blog/',
                                                       'http://example.com/page/'), False)
-        self.assertEquals(self.pinger.is_external_url('http://example.com/blog/'), False)
+        self.assertEquals(self.pinger.is_external_url('%s/blog/' % SITE), False)
         self.assertEquals(self.pinger.is_external_url('http://google.com/'), True)
         self.assertEquals(self.pinger.is_external_url('/blog/'), False)
 
@@ -931,9 +959,9 @@ class ExternalUrlsPingerTestCase(TestCase):
         self.assertEquals(external_urls, [])
         self.entry.content = """
         <p>This is a <a href="http://fantomas.willbreak.it/">link</a> to a site.</p>
-        <p>This is a <a href="http://example.com/blog/">link</a> within my site.</p>
+        <p>This is a <a href="%s/blog/">link</a> within my site.</p>
         <p>This is a <a href="/blog/">relative link</a> within my site.</p>
-        """
+        """ % SITE
         self.entry.save()
         external_urls = self.pinger.find_external_urls(self.entry)
         self.assertEquals(external_urls, ['http://fantomas.willbreak.it/'])
@@ -959,8 +987,8 @@ class ExternalUrlsPingerTestCase(TestCase):
         if 'example' in url:
             response = cStringIO.StringIO('')
             return addinfourl(response, {'X-Pingback': '/xmlrpc.php'}, url)
-        else:
-            response = cStringIO.StringIO(self.client.get(url).content)
+        elif 'localhost' in url:
+            response = cStringIO.StringIO('<link rel="pingback" href="/xmlrpc/">')
             return addinfourl(response, {}, url)
 
     def test_find_pingback_urls(self):
@@ -975,6 +1003,7 @@ class ExternalUrlsPingerTestCase(TestCase):
                            'http://example.com/': 'http://example.com/xmlrpc.php'})
         # Remove stub
         zinnia.ping.urlopen = self.original_urlopen
+
 
 class TemplateTagsTestCase(TestCase):
     """Test cases for Template tags"""
@@ -1056,7 +1085,7 @@ class TemplateTagsTestCase(TestCase):
         self.entry.status = DRAFT
         self.entry.save()
         context = get_popular_entries(3)
-        self.assertEquals(context['entries'], [second_entry,])
+        self.assertEquals(context['entries'], [second_entry])
 
     def test_get_similar_entries(self):
         self.publish_entry()
@@ -1228,3 +1257,24 @@ class TemplateTagsTestCase(TestCase):
         self.assertEquals(get_gravatar('  WEBMASTER@example.com  ', 15, 'x', '404'),
                           'http://www.gravatar.com/avatar/86d4fd4a22de452a9228298731a0b592.jpg?s=15&amp;r=x&amp;d=404')
 
+
+def suite():
+    """Suite of TestCases for Django"""
+    from unittest import TestSuite
+    from unittest import TestLoader
+    from django.conf import settings
+
+    suite = TestSuite()
+    loader = TestLoader()
+
+    test_cases = (ManagersTestCase, EntryTestCase, CategoryTestCase,
+                  ZinniaViewsTestCase, ExternalUrlsPingerTestCase,
+                  TemplateTagsTestCase)
+    if 'django_xmlrpc' in settings.INSTALLED_APPS:
+        test_cases += (PingBackTestCase, MetaWeblogTestCase)
+
+    for test_class in test_cases:
+        tests = loader.loadTestsFromTestCase(test_class)
+        suite.addTests(tests)
+
+    return suite

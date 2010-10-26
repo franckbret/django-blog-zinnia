@@ -1,5 +1,6 @@
-"""Urls for the zinnia trackback"""
-from django.conf.urls.defaults import *
+"""Urls for the Zinnia trackback"""
+from django.conf.urls.defaults import url
+from django.conf.urls.defaults import patterns
 
 urlpatterns = patterns('zinnia.views.trackback',
                        url(r'^(?P<slug>[-\w]+)/$', 'entry_trackback',

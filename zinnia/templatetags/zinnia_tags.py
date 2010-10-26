@@ -1,4 +1,4 @@
-"""Template tags for Zinnia"""
+"""Template tags and filters for Zinnia"""
 try:
     from hashlib import md5
 except ImportError:
@@ -8,6 +8,7 @@ from random import sample
 from urllib import urlencode
 from datetime import datetime
 
+from django.db import connection
 from django.template import Library
 from django.contrib.comments.models import Comment
 from django.contrib.contenttypes.models import ContentType
@@ -21,9 +22,10 @@ from zinnia.comparison import pearson_score
 
 register = Library()
 
-vectors = VectorBuilder({'queryset': Entry.published.all(),
+VECTORS = VectorBuilder({'queryset': Entry.published.all(),
                         'fields': ['title', 'excerpt', 'content']})
-cache_entries_related = {}
+CACHE_ENTRIES_RELATED = {}
+
 
 @register.inclusion_tag('zinnia/tags/dummy.html')
 def get_categories(template='zinnia/tags/categories.html'):
@@ -31,11 +33,13 @@ def get_categories(template='zinnia/tags/categories.html'):
     return {'template': template,
             'categories': Category.tree.all()}
 
+
 @register.inclusion_tag('zinnia/tags/dummy.html')
 def get_recent_entries(number=5, template='zinnia/tags/recent_entries.html'):
     """Return the most recent entries"""
     return {'template': template,
             'entries': Entry.published.all()[:number]}
+
 
 @register.inclusion_tag('zinnia/tags/dummy.html')
 def get_random_entries(number=5, template='zinnia/tags/random_entries.html'):
@@ -46,13 +50,10 @@ def get_random_entries(number=5, template='zinnia/tags/random_entries.html'):
     return {'template': template,
             'entries': sample(entries, number)}
 
+
 @register.inclusion_tag('zinnia/tags/dummy.html')
 def get_popular_entries(number=5, template='zinnia/tags/popular_entries.html'):
     """Return popular  entries"""
-    from django.db import connection
-    from django.contrib.comments.models import Comment
-    from django.contrib.contenttypes.models import ContentType
-
     ctype = ContentType.objects.get_for_model(Entry)
     query = """SELECT object_pk, COUNT(*) AS score
     FROM %s
@@ -72,16 +73,18 @@ def get_popular_entries(number=5, template='zinnia/tags/popular_entries.html'):
     return {'template': template,
             'entries': [object_dict[object_id]
                         for object_id in object_ids
-                        if object_dict.has_key(object_id)][:number]}
+                        if object_id in object_dict][:number]}
 
-@register.inclusion_tag('zinnia/tags/dummy.html',
-                        takes_context=True)
-def get_similar_entries(context, number=5, template='zinnia/tags/similar_entries.html'):
+
+@register.inclusion_tag('zinnia/tags/dummy.html', takes_context=True)
+def get_similar_entries(context, number=5,
+                        template='zinnia/tags/similar_entries.html'):
     """Return similar entries"""
-    global vectors
-    global cache_entries_related
+    global VECTORS
+    global CACHE_ENTRIES_RELATED
 
     def compute_related(object_id, dataset):
+        """Compute related entries to an entry with a dataset"""
         object_vector = None
         for entry, e_vector in dataset.items():
             if entry.pk == object_id:
@@ -97,46 +100,51 @@ def get_similar_entries(context, number=5, template='zinnia/tags/similar_entries
                 if score:
                     entry_related[entry] = score
 
-        related = sorted(entry_related.items(), key=lambda(k,v):(v,k))
-        return [i for i, s in related]
+        related = sorted(entry_related.items(), key=lambda(k, v): (v, k))
+        return [rel[0] for rel in related]
 
     object_id = context['object'].pk
-    columns, dataset = vectors()
-    key = '%s-%s' % (object_id, vectors.key)
-    if not key in cache_entries_related.keys():
-        cache_entries_related[key] = compute_related(object_id, dataset)
+    columns, dataset = VECTORS()
+    key = '%s-%s' % (object_id, VECTORS.key)
+    if not key in CACHE_ENTRIES_RELATED.keys():
+        CACHE_ENTRIES_RELATED[key] = compute_related(object_id, dataset)
 
-    entries = cache_entries_related[key][:number]
+    entries = CACHE_ENTRIES_RELATED[key][:number]
     return {'template': template,
             'entries': entries}
+
 
 @register.inclusion_tag('zinnia/tags/dummy.html')
 def get_archives_entries(template='zinnia/tags/archives_entries.html'):
     """Return archives entries"""
     return {'template': template,
             'archives': Entry.published.dates('creation_date', 'month',
-                                              order='DESC'),}
+                                              order='DESC')}
+
 
 @register.inclusion_tag('zinnia/tags/dummy.html')
-def get_archives_entries_tree(template='zinnia/tags/archives_entries_tree.html'):
+def get_archives_entries_tree(
+    template='zinnia/tags/archives_entries_tree.html'):
     """Return archives entries as a Tree"""
     return {'template': template,
             'archives': Entry.published.dates('creation_date', 'day',
-                                              order='ASC'),}
+                                              order='ASC')}
 
-@register.inclusion_tag('zinnia/tags/dummy.html',
-                        takes_context=True)
+
+@register.inclusion_tag('zinnia/tags/dummy.html', takes_context=True)
 def get_calendar_entries(context, year=None, month=None,
                          template='zinnia/tags/calendar.html'):
     """Return an HTML calendar of entries"""
     if not year or not month:
-        date_month = context.get('month') or context.get('day') or datetime.today()
+        date_month = context.get('month') or context.get('day') or \
+                     datetime.today()
         year, month = date_month.timetuple()[:2]
 
     try:
         from zinnia.templatetags.zcalendar import ZinniaCalendar
     except ImportError:
-        return {'calendar': '<p class="notice">Calendar is unavailable for Python<2.5.</p>'}
+        return {'calendar':
+                '<p class="notice">Calendar is unavailable for Python<2.5.</p>'}
 
     calendar = ZinniaCalendar(firstweekday=FIRST_WEEK_DAY)
     current_month = datetime(year, month, 1)
@@ -156,23 +164,26 @@ def get_calendar_entries(context, year=None, month=None,
             'previous_month': previous_month,
             'calendar': calendar.formatmonth(year, month)}
 
+
 @register.inclusion_tag('zinnia/tags/dummy.html')
 def get_recent_comments(number=5, template='zinnia/tags/recent_comments.html'):
     """Return the most recent comments"""
     # Using map(smart_unicode... fix bug related to issue #8554
-    entry_published_pks = map(smart_unicode, Entry.published.values_list('id', flat=True))
-    ct = ContentType.objects.get_for_model(Entry)
+    entry_published_pks = map(smart_unicode,
+                              Entry.published.values_list('id', flat=True))
+    content_type = ContentType.objects.get_for_model(Entry)
 
     comments = Comment.objects.filter(
-        content_type=ct, object_pk__in=entry_published_pks,
+        content_type=content_type,
+        object_pk__in=entry_published_pks,
         flags__flag=None, is_public=True).order_by(
         '-submit_date')[:number]
 
     return {'template': template,
             'comments': comments}
 
-@register.inclusion_tag('zinnia/tags/dummy.html',
-                        takes_context=True)
+
+@register.inclusion_tag('zinnia/tags/dummy.html', takes_context=True)
 def zinnia_breadcrumbs(context, separator='/', root_name='Blog',
                        template='zinnia/tags/breadcrumbs.html',):
     """Return a breadcrumb for the application"""
@@ -187,6 +198,7 @@ def zinnia_breadcrumbs(context, separator='/', root_name='Blog',
             'separator': separator,
             'breadcrumbs': breadcrumbs}
 
+
 @register.simple_tag
 def get_gravatar(email, size=80, rating='g', default=None):
     """Return url for a Gravatar"""
@@ -198,4 +210,3 @@ def get_gravatar(email, size=80, rating='g', default=None):
 
     url = '%s?%s' % (url, urlencode(options))
     return url.replace('&', '&amp;')
-

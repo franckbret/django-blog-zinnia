@@ -1,5 +1,4 @@
 """Pings utilities for Zinnia"""
-import re
 import socket
 import xmlrpclib
 import threading
@@ -13,17 +12,17 @@ from django.core.urlresolvers import reverse
 
 from zinnia.settings import PROTOCOL
 
+CURRENT_SITE = Site.objects.get_current()
+SITE = '%s://%s' % (PROTOCOL, CURRENT_SITE.domain)
+BLOG_URL = ''
+BLOG_FEED = ''
 
-current_site = Site.objects.get_current()
-site = '%s://%s' % (PROTOCOL, current_site.domain)
-blog_url = ''
-blog_feed = ''
 
 class DirectoryPinger(threading.Thread):
     """Threaded Directory Pinger"""
 
     def __init__(self, server_name, entries, timeout=10, start_now=True):
-        global blog_url, blog_feed
+        global BLOG_URL, BLOG_FEED
 
         self.results = []
         self.timeout = timeout
@@ -31,15 +30,16 @@ class DirectoryPinger(threading.Thread):
         self.server_name = server_name
         self.server = xmlrpclib.ServerProxy(self.server_name)
 
-        if not blog_url or not blog_feed:
-            blog_url = '%s%s' % (site, reverse('zinnia_entry_archive_index'))
-            blog_feed = '%s%s' % (site, reverse('zinnia_entry_latest_feed'))
+        if not BLOG_URL or not BLOG_FEED:
+            BLOG_URL = '%s%s' % (SITE, reverse('zinnia_entry_archive_index'))
+            BLOG_FEED = '%s%s' % (SITE, reverse('zinnia_entry_latest_feed'))
 
         threading.Thread.__init__(self)
         if start_now:
             self.start()
 
     def run(self):
+        """Ping entries to a Directory in a Thread"""
         socket.setdefaulttimeout(self.timeout)
         for entry in self.entries:
             reply = self.ping_entry(entry)
@@ -47,20 +47,23 @@ class DirectoryPinger(threading.Thread):
         socket.setdefaulttimeout(None)
 
     def ping_entry(self, entry):
-        entry_url = '%s%s' % (site, entry.get_absolute_url())
+        """Ping an entry to a Directory"""
+        entry_url = '%s%s' % (SITE, entry.get_absolute_url())
         categories = '|'.join([c.title for c in entry.categories.all()])
 
         try:
-            reply = self.server.weblogUpdates.extendedPing(current_site.name,
-                                                           blog_url, entry_url,
-                                                           blog_feed, categories)
-        except Exception, ex:
+            reply = self.server.weblogUpdates.extendedPing(CURRENT_SITE.name,
+                                                           BLOG_URL, entry_url,
+                                                           BLOG_FEED,
+                                                           categories)
+        except Exception:
             try:
-                reply = self.server.weblogUpdates.ping(current_site.name,
-                                                       blog_url, entry_url,
+                reply = self.server.weblogUpdates.ping(CURRENT_SITE.name,
+                                                       BLOG_URL, entry_url,
                                                        categories)
-            except xmlrpclib.ProtocolError, ex:
-                reply = {'message': '%s is an invalid directory.' % self.server_name,
+            except xmlrpclib.ProtocolError:
+                reply = {'message': '%s is an invalid directory.' % \
+                         self.server_name,
                          'flerror': True}
         return reply
 
@@ -72,13 +75,14 @@ class ExternalUrlsPinger(threading.Thread):
         self.results = []
         self.entry = entry
         self.timeout = timeout
-        self.entry_url = '%s%s' % (site, self.entry.get_absolute_url())
+        self.entry_url = '%s%s' % (SITE, self.entry.get_absolute_url())
 
         threading.Thread.__init__(self)
         if start_now:
             self.start()
 
     def run(self):
+        """Ping external URLS in a Thread"""
         socket.setdefaulttimeout(self.timeout)
 
         external_urls = self.find_external_urls(self.entry)
@@ -90,7 +94,7 @@ class ExternalUrlsPinger(threading.Thread):
 
         socket.setdefaulttimeout(None)
 
-    def is_external_url(self, url, site_url=site):
+    def is_external_url(self, url, site_url=SITE):
         """Check of the url in an external url"""
         url_splitted = urlsplit(url)
         if not url_splitted.netloc:
@@ -105,10 +109,11 @@ class ExternalUrlsPinger(threading.Thread):
         return external_urls
 
     def find_pingback_href(self, content):
+        """Try to find Link markup to pingback url"""
         soup = BeautifulSoup(content)
         for link in soup.findAll('link'):
             dict_attr = dict(link.attrs)
-            if dict_attr.has_key('rel') and dict_attr.has_key('href'):
+            if 'rel' in dict_attr and 'href' in dict_attr:
                 if dict_attr['rel'].lower() == 'pingback':
                     return dict_attr.get('href')
 
@@ -138,7 +143,6 @@ class ExternalUrlsPinger(threading.Thread):
         try:
             server = xmlrpclib.ServerProxy(server_name)
             reply = server.pingback.ping(self.entry_url, target_url)
-        except (xmlrpclib.Fault, xmlrpclib.ProtocolError), ex:
+        except (xmlrpclib.Fault, xmlrpclib.ProtocolError):
             reply = '%s cannot be pinged.' % target_url
         return reply
-

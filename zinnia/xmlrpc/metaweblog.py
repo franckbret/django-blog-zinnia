@@ -22,10 +22,10 @@ from zinnia.settings import UPLOAD_TO
 from zinnia.managers import DRAFT, PUBLISHED
 from django_xmlrpc.decorators import xmlrpc_func
 
-
 # http://docs.nucleuscms.org/blog/12#errorcodes
 LOGIN_ERROR = 801
 PERMISSION_DENIED = 803
+
 
 def authenticate(username, password, permission=None):
     """Authenticate staff_user with permission"""
@@ -42,12 +42,14 @@ def authenticate(username, password, permission=None):
             raise Fault(PERMISSION_DENIED, _('User cannot %s.') % permission)
     return user
 
+
 def blog_structure(site):
     """A blog structure"""
     return {'url': '%s://%s%s' % (
         PROTOCOL, site.domain, reverse('zinnia_entry_archive_index')),
             'blogid': settings.SITE_ID,
             'blogName': site.name}
+
 
 def user_structure(user, site):
     """An user structure"""
@@ -60,12 +62,14 @@ def user_structure(user, site):
                 PROTOCOL, site.domain,
                 reverse('zinnia_author_detail', args=[user.username]))}
 
+
 def author_structure(user):
     """An author structure"""
     return {'user_id': user.pk,
             'user_login': user.username,
             'display_name': user.username,
             'user_email': user.email}
+
 
 def category_structure(category, site):
     """A category structure"""
@@ -80,16 +84,19 @@ def category_structure(category, site):
             'categoryId': category.pk,
             'parentId': category.parent and category.parent.pk or 0,
             'categoryDescription': category.description,
-            'categoryName': category.title,}
+            'categoryName': category.title}
+
 
 def post_structure(entry, site):
     """A post structure with extensions"""
     author = entry.authors.all()[0]
     return {'title': entry.title,
             'description': unicode(entry.html_content),
-            'link': '%s://%s%s' % (PROTOCOL, site.domain, entry.get_absolute_url()),
+            'link': '%s://%s%s' % (PROTOCOL, site.domain,
+                                   entry.get_absolute_url()),
             # Basic Extensions
-            'permaLink': '%s://%s%s' % (PROTOCOL, site.domain, entry.get_absolute_url()),
+            'permaLink': '%s://%s%s' % (PROTOCOL, site.domain,
+                                        entry.get_absolute_url()),
             'categories': [cat.title for cat in entry.categories.all()],
             'dateCreated': DateTime(entry.creation_date.isoformat()),
             'postid': entry.pk,
@@ -106,13 +113,15 @@ def post_structure(entry, site):
             'wp_password': entry.password,
             'wp_slug': entry.slug}
 
+
 @xmlrpc_func(returns='struct[]', args=['string', 'string', 'string'])
 def get_users_blogs(apikey, username, password):
     """blogger.getUsersBlogs(api_key, username, password)
     => blog structure[]"""
     authenticate(username, password)
     site = Site.objects.get_current()
-    return [blog_structure(site),]
+    return [blog_structure(site)]
+
 
 @xmlrpc_func(returns='struct', args=['string', 'string', 'string'])
 def get_user_info(apikey, username, password):
@@ -122,14 +131,18 @@ def get_user_info(apikey, username, password):
     site = Site.objects.get_current()
     return user_structure(user, site)
 
+
 @xmlrpc_func(returns='struct[]', args=['string', 'string', 'string'])
 def get_authors(apikey, username, password):
     """wp.getAuthors(api_key, username, password)
     => author structure[]"""
-    user = authenticate(username, password)
-    return [author_structure(author) for author in User.objects.filter(is_staff=True)]
+    authenticate(username, password)
+    return [author_structure(author)
+            for author in User.objects.filter(is_staff=True)]
 
-@xmlrpc_func(returns='boolean', args=['string', 'string', 'string', 'string', 'string'])
+
+@xmlrpc_func(returns='boolean', args=['string', 'string',
+                                      'string', 'string', 'string'])
 def delete_post(apikey, post_id, username, password, publish):
     """blogger.deletePost(api_key, post_id, username, password, 'publish')
     => boolean"""
@@ -138,6 +151,7 @@ def delete_post(apikey, post_id, username, password, publish):
     entry.delete()
     return True
 
+
 @xmlrpc_func(returns='struct', args=['string', 'string', 'string'])
 def get_post(post_id, username, password):
     """metaWeblog.getPost(post_id, username, password)
@@ -145,6 +159,7 @@ def get_post(post_id, username, password):
     user = authenticate(username, password)
     site = Site.objects.get_current()
     return post_structure(Entry.objects.get(id=post_id, authors=user), site)
+
 
 @xmlrpc_func(returns='struct[]', args=['string', 'string', 'string', 'integer'])
 def get_recent_posts(blog_id, username, password, number):
@@ -155,112 +170,124 @@ def get_recent_posts(blog_id, username, password, number):
     return [post_structure(entry, site) \
             for entry in Entry.objects.filter(authors=user)[:number]]
 
+
 @xmlrpc_func(returns='struct[]', args=['string', 'string', 'string'])
 def get_categories(blog_id, username, password):
     """metaWeblog.getCategories(blog_id, username, password)
     => category structure[]"""
-    user = authenticate(username, password)
+    authenticate(username, password)
     site = Site.objects.get_current()
     return [category_structure(category, site) \
             for category in Category.objects.all()]
+
 
 @xmlrpc_func(returns='string', args=['string', 'string', 'string', 'struct'])
 def new_category(blog_id, username, password, category_struct):
     """wp.newCategory(blog_id, username, password, category)
     => category_id"""
-    user = authenticate(username, password, 'zinnia.add_category')
+    authenticate(username, password, 'zinnia.add_category')
     category_dict = {'title': category_struct['name'],
                      'description': category_struct['description'],
                      'slug': category_struct['slug']}
     if int(category_struct['parent_id']):
-        category_dict['parent'] = Category.objects.get(pk=category_struct['parent_id'])
+        category_dict['parent'] = Category.objects.get(
+            pk=category_struct['parent_id'])
     category = Category.objects.create(**category_dict)
 
     return category.pk
 
-@xmlrpc_func(returns='string', args=['string', 'string', 'string', 'struct', 'boolean'])
+
+@xmlrpc_func(returns='string', args=['string', 'string', 'string',
+                                     'struct', 'boolean'])
 def new_post(blog_id, username, password, post, publish):
     """metaWeblog.newPost(blog_id, username, password, post, publish)
     => post_id"""
     user = authenticate(username, password, 'zinnia.add_entry')
     if post.get('dateCreated'):
-        creation_date = datetime.strptime(post['dateCreated'].value.replace('Z', '').replace('-', ''),
-                                          '%Y%m%dT%H:%M:%S')
+        creation_date = datetime.strptime(
+            post['dateCreated'].value.replace('Z', '').replace('-', ''),
+            '%Y%m%dT%H:%M:%S')
     else:
         creation_date = datetime.now()
 
     entry_dict = {'title': post['title'],
                   'content': post['description'],
-                  'excerpt': post.get('mt_excerpt', truncate_words(strip_tags(post['description']), 50)),
+                  'excerpt': post.get('mt_excerpt', truncate_words(
+                      strip_tags(post['description']), 50)),
                   'creation_date': creation_date,
                   'last_update': creation_date,
                   'comment_enabled': post.get('mt_allow_comments', 1) == 1,
                   'pingback_enabled': post.get('mt_allow_pings', 1) == 1,
-                  'tags': post.has_key('mt_keywords') and post['mt_keywords'] or '',
-                  'slug': post.has_key('wp_slug') and post['wp_slug'] or slugify(post['title']),
+                  'tags': 'mt_keywords' in post and post['mt_keywords'] or '',
+                  'slug': 'wp_slug' in post and post['wp_slug'] or slugify(
+                      post['title']),
                   'password': post.get('wp_password', ''),
                   'status': publish and PUBLISHED or DRAFT}
     entry = Entry.objects.create(**entry_dict)
 
     author = user
-    if post.has_key('wp_author_id') and user.has_perm('zinnia.can_change_author'):
+    if 'wp_author_id' in post and user.has_perm('zinnia.can_change_author'):
         if int(post['wp_author_id']) != user.pk:
             author = User.objects.get(pk=post['wp_author_id'])
     entry.authors.add(author)
 
     entry.sites.add(Site.objects.get_current())
-    if post.has_key('categories'):
-        entry.categories.add(*[Category.objects.get_or_create(title=cat, slug=slugify(cat))[0]
+    if 'categories' in post:
+        entry.categories.add(*[Category.objects.get_or_create(
+            title=cat, slug=slugify(cat))[0]
                                for cat in post['categories']])
 
     return entry.pk
 
 
-@xmlrpc_func(returns='boolean', args=['string', 'string', 'string', 'struct', 'boolean'])
+@xmlrpc_func(returns='boolean', args=['string', 'string', 'string',
+                                      'struct', 'boolean'])
 def edit_post(post_id, username, password, post, publish):
     """metaWeblog.editPost(post_id, username, password, post, publish)
     => boolean"""
     user = authenticate(username, password, 'zinnia.change_entry')
     entry = Entry.objects.get(id=post_id, authors=user)
     if post.get('dateCreated'):
-        creation_date = datetime.strptime(post['dateCreated'].value.replace('Z', '').replace('-', ''),
-                                          '%Y%m%dT%H:%M:%S')
+        creation_date = datetime.strptime(
+            post['dateCreated'].value.replace('Z', '').replace('-', ''),
+            '%Y%m%dT%H:%M:%S')
     else:
         creation_date = entry.creation_date
 
     entry.title = post['title']
     entry.content = post['description']
-    entry.excerpt = post.get('mt_excerpt', truncate_words(strip_tags(post['description']), 50))
+    entry.excerpt = post.get('mt_excerpt', truncate_words(
+        strip_tags(post['description']), 50))
     entry.creation_date = creation_date
     entry.last_update = datetime.now()
     entry.comment_enabled = post.get('mt_allow_comments', 1) == 1
     entry.pingback_enabled = post.get('mt_allow_pings', 1) == 1
-    entry.tags = post.has_key('mt_keywords') and post['mt_keywords'] or ''
-    entry.slug = post.has_key('wp_slug') and post['wp_slug'] or slugify(post['title'])
+    entry.tags = 'mt_keywords' in post and post['mt_keywords'] or ''
+    entry.slug = 'wp_slug' in post and post['wp_slug'] or slugify(
+        post['title'])
     entry.status = publish and PUBLISHED or DRAFT
     entry.password = post.get('wp_password', '')
     entry.save()
 
-    if post.has_key('wp_author_id') and user.has_perm('zinnia.can_change_author'):
+    if 'wp_author_id' in post and user.has_perm('zinnia.can_change_author'):
         if int(post['wp_author_id']) != user.pk:
             author = User.objects.get(pk=post['wp_author_id'])
             entry.authors.clear()
             entry.authors.add(author)
 
-    if post.has_key('categories'):
+    if 'categories' in post:
         entry.categories.clear()
-        entry.categories.add(*[Category.objects.get_or_create(title=cat, slug=slugify(cat))[0]
+        entry.categories.add(*[Category.objects.get_or_create(
+            title=cat, slug=slugify(cat))[0]
                                for cat in post['categories']])
     return True
+
 
 @xmlrpc_func(returns='struct', args=['string', 'string', 'string', 'struct'])
 def new_media_object(blog_id, username, password, media):
     """metaWeblog.newMediaObject(blog_id, username, password, media)
     => media structure"""
-    user = authenticate(username, password)
-    site = Site.objects.get_current()
-
+    authenticate(username, password)
     path = default_storage.save(os.path.join(UPLOAD_TO, media['name']),
                                 ContentFile(media['bits'].data))
     return {'url': default_storage.url(path)}
-
