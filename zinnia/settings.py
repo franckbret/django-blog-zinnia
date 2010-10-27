@@ -18,7 +18,7 @@ ADVANCED_SEARCH = getattr(settings, 'ZINNIA_ADVANCED_SEARCH', True)
 
 WYSIWYG = getattr(settings, 'ZINNIA_WYSIWYG',
                   'tinymce' in settings.INSTALLED_APPS \
-                  and 'tinymce' or 'wymeditor')
+                  and 'tinymce' or 'wymeditor' or 'placeholder')
 
 MAIL_COMMENT = getattr(settings, 'ZINNIA_MAIL_COMMENT', True)
 MAIL_COMMENT_REPLY = getattr(settings, 'ZINNIA_MAIL_COMMENT_REPLY', False)

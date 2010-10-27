@@ -25,8 +25,8 @@ class EntryAdmin(PlaceholderAdmin):
     """Admin for Entry model"""
     form = EntryAdminForm
     date_hierarchy = 'creation_date'
-    fieldsets = ((_('Content'), {'fields': ('title', 'image', 'status')}),
-                 (None, {'fields': ('content',),
+    fieldsets = ((_('Content'), {'fields': ('title', 'image', 'status', 'content')}),
+                 (None, {'fields': ('placeholder',),
                          'classes': ('plugin-holder', 'plugin-holder-nopage')}),
                  (_('Options'), {'fields': ('excerpt', 'template', 'related',
                                             'authors', 'creation_date',
@@ -143,19 +143,36 @@ class EntryAdmin(PlaceholderAdmin):
                {'url': short_url}
     get_short_url.allow_tags = True
     get_short_url.short_description = _('short url')
+    
+    def get_placeholder_content(self, entry):
+        """Use render_placeholder to parse placeholder content and give the
+        result to entry content field"""
+        content = render_placeholder(entry.placeholder, context)
 
     # Custom Methods
     def save_model(self, request, entry, form, change):
-        """Save the authors, update time, make an excerpt"""
+        """Save the authors, update time, make an excerpt.
+        If ZINNIA_WYSIWYG = 'placeholders' render placeholder to content."""
+        
+        if settings.WYSIWYG == 'placeholder' :
+            try:
+                from cms.plugin_rendering import render_placeholder
+            except ImportError:
+                raise ImproperlyConfigured, "Could not load cms.plugin_rendering"
+        
+            context = {}
+            context['request'] = request
+            entry.content = render_placeholder(entry.placeholder, context)
+        
         if not form.cleaned_data.get('excerpt') and entry.status == PUBLISHED:
             entry.excerpt = truncate_words(strip_tags(entry.content), 50)
 
         if entry.pk and not request.user.has_perm('zinnia.can_change_author'):
             form.cleaned_data['authors'] = entry.authors.all()
-
+            
         if not form.cleaned_data.get('authors'):
             form.cleaned_data['authors'].append(request.user)
-
+            
         entry.last_update = datetime.now()
         entry.save()
 

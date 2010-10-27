@@ -23,7 +23,7 @@ from zinnia.comparison import pearson_score
 register = Library()
 
 VECTORS = VectorBuilder({'queryset': Entry.published.all(),
-                        'fields': ['title', 'excerpt', 'content']})
+                        'fields': ['title', 'excerpt']})
 CACHE_ENTRIES_RELATED = {}
 
 

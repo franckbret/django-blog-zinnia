@@ -41,7 +41,8 @@
   </div>
   {% endif %}
   <div class="entry-content">
-    {% render_placeholder object.content "640" %}
+    {% comment %}{% render_placeholder object.content "640" %}{% endcomment %}
+	{{ object_content }}
   </div>
 </div>
 

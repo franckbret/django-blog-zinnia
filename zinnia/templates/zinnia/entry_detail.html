@@ -14,9 +14,9 @@
 
 {% block content %}
 <div id="entry-{{ object.pk }}" class="hentry span-16 last">
-  {#% with object.html_content|safe as object_content %#}
+  {% with object.html_content|safe as object_content %}
   {% include "zinnia/_entry_detail.html" %}
-  {#% endwith %#}
+  {% endwith %}
 </div>
 
 <hr />
