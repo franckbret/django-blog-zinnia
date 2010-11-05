@@ -53,7 +53,7 @@ class EntryFeed(Feed):
 
     def item_author_name(self, item):
         """Returns the first author of an entry"""
-        return item.authors.all()[0]
+        return item.authors.all()[0].username
 
     def item_author_email(self, item):
         """Returns the first author's email"""
@@ -200,11 +200,11 @@ class SearchEntries(EntryFeed):
 
     def title(self, obj):
         """Title of the feed"""
-        return _("Results of the search for %s") % obj
+        return _('Results of the search for %s') % obj
 
     def description(self, obj):
         """Description of the feed"""
-        return _("The entries containing the pattern %s") % obj
+        return _('The entries containing the pattern %s') % obj
 
 
 class EntryDiscussions(Feed):

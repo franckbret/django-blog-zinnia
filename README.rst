@@ -38,6 +38,7 @@ Main features :
   * Django-CMS plugins
   * Collaborative work
   * Tags autocompletion
+  * Entry model extendable
   * Pingback/Trackback support
   * WYMeditor or TinyMCE support
   * WordPress conversion utility
@@ -55,6 +56,11 @@ Make sure to install these packages prior to installation :
  * django-mptt
  * django-tagging
  * BeautifulSoup
+
+The packages below are optionnal but needed for run the full test suite.
+
+ * pyparsing
+ * django-xmlrpc
 
 Installation
 ============
@@ -83,6 +89,7 @@ INSTALLED_APPS section of your project's settings. ::
   ...   # Your favorites apps
   ...   'django.contrib.contenttypes',
   ...   'django.contrib.comments',
+  ...   'django.contrib.sessions',
   ...   'django.contrib.sites',
   ...   'django.contrib.admin',
   ...   'tagging',
@@ -240,6 +247,13 @@ project's settings.
 It will provides custom plugins for adding entries into your pages, an
 App-Hook and Menus for easy integration.
 
+If you want to use the plugin system of django-cms in your entries, an
+extended EntryModel with a **PlaceholderField** is provided.
+
+Add this line in your project's settings. ::
+
+  >>> ZINNIA_ENTRY_BASE_MODEL = 'zinnia.plugins.placeholder.EntryPlaceholder'
+
 TinyMCE
 -------
 
@@ -256,7 +270,7 @@ XML-RPC
 
 Zinnia provides few webservices via XML-RPC, but before using it,
 you need to install `django-xmlrpc
-<http://github.com/Fantomas42/django-xmlrpc>`_.
+<http://pypi.python.org/pypi/django-xmlrpc/>`_.
 
 Then register **django_xmlrpc** in your INSTALLED_APPS section of your
 project's settings.
@@ -335,7 +349,6 @@ Display the breadcrumbs for the pages handled by Zinnia.
 
 Display the Gravatar image associated to an email, usefull for comments.
 
-
 Development
 ===========
 
@@ -363,6 +376,25 @@ Once these operations are done, you are ready to develop the zinnia project.
 Run this command to launch the tests. ::
 
   $> ./bin/test
+
+To view the code coverage run this command. ::
+
+  $> ./bin/cover
+
+Execute these commands to check the code conventions. ::
+
+  $> ./bin/pyflakes zinnia
+  $> ./bin/pep8 --count -r --exclude=tests.py,migrations zinnia
+
+To launch the demo site, execute these commands. ::
+
+  $> ./bin/demo syncdb
+  $> ./bin/demo loaddata helloworld
+  $> ./bin/demo runserver
+
+And for building the HTML documentation run this. ::
+
+  $> ./bin/docs
 
 Pretty easy no ?
 

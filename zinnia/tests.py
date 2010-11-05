@@ -4,15 +4,20 @@ from datetime import datetime
 from urllib import addinfourl
 from urlparse import urlsplit
 from urllib2 import HTTPError
+from xmlrpclib import Binary
 from xmlrpclib import Fault
 from xmlrpclib import Transport
 from xmlrpclib import ServerProxy
+from tempfile import TemporaryFile
 
 from django.test import TestCase
 from django.test.client import Client
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
+from django.core.urlresolvers import reverse
 from django.contrib.comments.models import Comment
+from django.core.files.storage import default_storage
+from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
 from django.template import Context
 from django.template import TemplateDoesNotExist
@@ -22,8 +27,27 @@ from BeautifulSoup import BeautifulSoup
 
 from zinnia.models import Entry
 from zinnia.models import Category
+from zinnia.settings import UPLOAD_TO
 from zinnia.ping import SITE
 from zinnia.ping import ExternalUrlsPinger
+from zinnia.feeds import ImgParser
+from zinnia.feeds import EntryFeed
+from zinnia.feeds import LatestEntries
+from zinnia.feeds import CategoryEntries
+from zinnia.feeds import AuthorEntries
+from zinnia.feeds import TagEntries
+from zinnia.feeds import SearchEntries
+from zinnia.feeds import EntryDiscussions
+from zinnia.feeds import EntryComments
+from zinnia.feeds import EntryPingbacks
+from zinnia.feeds import EntryTrackbacks
+from zinnia.comparison import pearson_score
+from zinnia.comparison import VectorBuilder
+from zinnia.comparison import ClusteredModel
+from zinnia.sitemaps import EntrySitemap
+from zinnia.sitemaps import CategorySitemap
+from zinnia.sitemaps import AuthorSitemap
+from zinnia.sitemaps import TagSitemap
 from zinnia.managers import DRAFT, PUBLISHED
 from zinnia.managers import tags_published
 from zinnia.managers import entries_published
@@ -397,6 +421,11 @@ class ZinniaViewsTestCase(TestCase):
     urls = 'zinnia.urls.tests'
     fixtures = ['zinnia_test_data.json']
 
+    def setUp(self):
+        self.site = Site.objects.get_current()
+        self.author = User.objects.get(username='admin')
+        self.category = Category.objects.get(slug='tests')
+
     def create_published_entry(self):
         params = {'title': 'My test entry',
                   'content': 'My test content',
@@ -405,9 +434,9 @@ class ZinniaViewsTestCase(TestCase):
                   'creation_date': datetime(2010, 1, 1),
                   'status': PUBLISHED}
         entry = Entry.objects.create(**params)
-        entry.sites.add(Site.objects.get_current())
-        entry.categories.add(Category.objects.get(slug='tests'))
-        entry.authors.add(User.objects.get(username='admin'))
+        entry.sites.add(self.site)
+        entry.categories.add(self.category)
+        entry.authors.add(self.author)
         return entry
 
     def check_publishing_context(self, url, first_expected,
@@ -450,6 +479,28 @@ class ZinniaViewsTestCase(TestCase):
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'zinnia/_entry_detail.html')
 
+    def test_zinnia_entry_detail_login(self):
+        entry = self.create_published_entry()
+        entry.login_required = True
+        entry.save()
+        response = self.client.get('/2010/01/01/my-test-entry/')
+        self.assertTemplateUsed(response, 'zinnia/login.html')
+
+    def test_zinnia_entry_detail_password(self):
+        entry = self.create_published_entry()
+        entry.password = 'password'
+        entry.save()
+        response = self.client.get('/2010/01/01/my-test-entry/')
+        self.assertTemplateUsed(response, 'zinnia/password.html')
+        self.assertEquals(response.context['error'], False)
+        response = self.client.post('/2010/01/01/my-test-entry/',
+                                    {'password': 'bad_password'})
+        self.assertTemplateUsed(response, 'zinnia/password.html')
+        self.assertEquals(response.context['error'], True)
+        response = self.client.post('/2010/01/01/my-test-entry/',
+                                    {'password': 'password'})
+        self.assertEquals(response.status_code, 302)
+
     def test_zinnia_entry_channel(self):
         self.check_publishing_context('/channel-test/', 2, 3)
 
@@ -487,10 +538,10 @@ class ZinniaViewsTestCase(TestCase):
         self.check_publishing_context('/search/?pattern=test', 2, 3)
         response = self.client.get('/search/?pattern=ab')
         self.assertEquals(len(response.context['object_list']), 0)
-        self.assertEquals(response.context['error'], 'The pattern is too short')
+        self.assertEquals(response.context['error'], _('The pattern is too short'))
         response = self.client.get('/search/')
         self.assertEquals(len(response.context['object_list']), 0)
-        self.assertEquals(response.context['error'], 'No pattern to search found')
+        self.assertEquals(response.context['error'], _('No pattern to search found'))
 
     def test_zinnia_sitemap(self):
         response = self.client.get('/sitemap/')
@@ -526,6 +577,231 @@ class ZinniaViewsTestCase(TestCase):
         self.assertEquals(self.client.post('/trackback/test-1/', {'url': 'http://example.com'}).content,
                           '<?xml version="1.0" encoding="utf-8"?>\n<response>\n  \n  <error>1</error>\n  '
                           '<message>Trackback is already registered</message>\n  \n</response>\n')
+
+class ZinniaSitemapsTestCase(TestCase):
+    """Test cases for Sitemaps classes provided"""
+
+    def setUp(self):
+        self.site = Site.objects.get_current()
+        self.author = User.objects.create(username='admin',
+                                          email='admin@example.com')
+        self.category = Category.objects.create(title='Tests', slug='tests')
+        params = {'title': 'My entry 1', 'content': 'My content 1',
+                  'tags': 'zinnia, test', 'slug': 'my-entry-1',
+                  'status': PUBLISHED}
+        self.entry_1 = Entry.objects.create(**params)
+        self.entry_1.authors.add(self.author)
+        self.entry_1.categories.add(self.category)
+        self.entry_1.sites.add(self.site)
+
+        params = {'title': 'My entry 2', 'content': 'My content 2',
+                  'tags': 'zinnia', 'slug': 'my-entry-2',
+                  'status': PUBLISHED}
+        self.entry_2 = Entry.objects.create(**params)
+        self.entry_2.authors.add(self.author)
+        self.entry_2.categories.add(self.category)
+        self.entry_2.sites.add(self.site)
+
+    def test_entry_sitemap(self):
+        sitemap = EntrySitemap()
+        self.assertEquals(len(sitemap.items()), 2)
+        self.assertEquals(sitemap.lastmod(self.entry_1), self.entry_1.last_update)
+
+    def test_category_sitemap(self):
+        sitemap = CategorySitemap()
+        self.assertEquals(len(sitemap.items()), 1)
+        self.assertEquals(sitemap.lastmod(self.category), self.entry_2.creation_date)
+        self.assertEquals(sitemap.lastmod(Category.objects.create(
+            title='New', slug='new')), None)
+        self.assertEquals(sitemap.priority(self.category), '1.0')
+
+    def test_author_sitemap(self):
+        sitemap = AuthorSitemap()
+        self.assertEquals(len(sitemap.items()), 1)
+        self.assertEquals(sitemap.lastmod(self.author), self.entry_2.creation_date)
+        self.assertEquals(sitemap.lastmod(User.objects.create(
+            username='New', email='new@example.com')), None)
+        self.assertEquals(sitemap.location(self.author), '/authors/admin/')
+
+    def test_tag_sitemap(self):
+        sitemap = TagSitemap()
+        zinnia_tag = Tag.objects.get(name='zinnia')
+        self.assertEquals(len(sitemap.items()), 2)
+        self.assertEquals(sitemap.lastmod(zinnia_tag), self.entry_2.creation_date)
+        self.assertEquals(sitemap.priority(zinnia_tag), '1.0')
+        self.assertEquals(sitemap.location(zinnia_tag), '/tags/zinnia/')
+
+class ZinniaFeedsTestCase(TestCase):
+    """Test cases for the Feed classes provided"""
+
+    def setUp(self):
+        self.site = Site.objects.get_current()
+        self.author = User.objects.create(username='admin',
+                                          email='admin@example.com')
+        self.category = Category.objects.create(title='Tests', slug='tests')
+
+    def test_img_parser(self):
+        parser = ImgParser()
+        parser.feed('')
+        self.assertEquals(len(parser.img_locations), 0)
+        parser.feed('<img title="image title" />')
+        self.assertEquals(len(parser.img_locations), 0)
+        parser.feed('<img src="image.jpg" />' \
+                    '<img src="image2.jpg" />' )
+        self.assertEquals(len(parser.img_locations), 2)
+
+    def create_published_entry(self):
+        params = {'title': 'My test entry',
+                  'content': 'My test content with image <img src="/image.jpg" />',
+                  'slug': 'my-test-entry',
+                  'tags': 'tests',
+                  'creation_date': datetime(2010, 1, 1),
+                  'status': PUBLISHED}
+        entry = Entry.objects.create(**params)
+        entry.sites.add(self.site)
+        entry.categories.add(self.category)
+        entry.authors.add(self.author)
+        return entry
+
+    def create_discussions(self, entry):
+        comment = Comment.objects.create(comment='My Comment',
+                                         user=self.author,
+                                         content_object=entry,
+                                         site=self.site)
+        pingback = Comment.objects.create(comment='My Pingback',
+                                          user=self.author,
+                                          content_object=entry,
+                                          site=self.site)
+        pingback.flags.create(user=self.author, flag='pingback')
+        trackback = Comment.objects.create(comment='My Trackback',
+                                           user=self.author,
+                                           content_object=entry,
+                                           site=self.site)
+        trackback.flags.create(user=self.author, flag='trackback')
+        return [comment, pingback, trackback]
+
+    def test_feed_entry(self):
+        entry = self.create_published_entry()
+        feed = EntryFeed()
+        self.assertEquals(feed.item_pubdate(entry), entry.creation_date)
+        self.assertEquals(feed.item_categories(entry), [self.category.title])
+        self.assertEquals(feed.item_author_name(entry), self.author.username)
+        self.assertEquals(feed.item_author_email(entry), self.author.email)
+        self.assertEquals(feed.item_author_link(entry),
+                          'http://example.com/authors/%s/' % self.author.username)
+        self.assertEquals(feed.item_enclosure_url(entry), 'http://example.com/image.jpg')
+        self.assertEquals(feed.item_enclosure_length(entry), '100000')
+        self.assertEquals(feed.item_enclosure_mime_type(entry), 'image/jpeg')
+
+    def test_latest_entries(self):
+        self.create_published_entry()
+        feed = LatestEntries()
+        self.assertEquals(feed.link(), '/')
+        self.assertEquals(len(feed.items()), 1)
+
+    def test_category_entries(self):
+        self.create_published_entry()
+        feed = CategoryEntries()
+        self.assertEquals(feed.get_object('request', '/tests/'), self.category)
+        self.assertEquals(len(feed.items(self.category)), 1)
+        self.assertEquals(feed.link(self.category), '/categories/tests/')
+
+    def test_author_entries(self):
+        self.create_published_entry()
+        feed = AuthorEntries()
+        self.assertEquals(feed.get_object('request', 'admin'), self.author)
+        self.assertEquals(len(feed.items(self.author)), 1)
+        self.assertEquals(feed.link(self.author), '/authors/admin/')
+
+    def test_tag_entries(self):
+        self.create_published_entry()
+        feed = TagEntries()
+        self.assertEquals(feed.get_object('request', 'tests').name, 'tests')
+        self.assertEquals(len(feed.items('tests')), 1)
+        self.assertEquals(feed.link(Tag(name='tests')), '/tags/tests/')
+
+    def test_search_entries(self):
+        self.create_published_entry()
+        feed = SearchEntries()
+        self.assertEquals(feed.get_object('request', 'test'), 'test')
+        self.assertEquals(len(feed.items('test')), 1)
+        self.assertEquals(feed.link('test'), '/search/?pattern=test')
+
+    def test_entry_discussions(self):
+        entry = self.create_published_entry()
+        comments = self.create_discussions(entry)
+        feed = EntryDiscussions()
+        self.assertEquals(feed.get_object('request', entry.slug), entry)
+        self.assertEquals(feed.link(entry), '/2010/01/01/my-test-entry/')
+        self.assertEquals(len(feed.items(entry)), 3)
+        self.assertEquals(feed.item_pubdate(comments[0]), comments[0].submit_date)
+        self.assertEquals(feed.item_link(comments[0]), '/comments/cr/13/1/#c1')
+        self.assertEquals(feed.item_author_name(comments[0]), 'admin')
+        self.assertEquals(feed.item_author_email(comments[0]), 'admin@example.com')
+        self.assertEquals(feed.item_author_link(comments[0]), '')
+
+    def test_entry_comments(self):
+        entry = self.create_published_entry()
+        comments = self.create_discussions(entry)
+        feed = EntryComments()
+        self.assertEquals(list(feed.items(entry)), [comments[0]])
+        self.assertEquals(feed.item_link(comments[0]), '/comments/cr/13/1/#comment_1')
+
+    def test_entry_pingbacks(self):
+        entry = self.create_published_entry()
+        comments = self.create_discussions(entry)
+        feed = EntryPingbacks()
+        self.assertEquals(list(feed.items(entry)), [comments[1]])
+        self.assertEquals(feed.item_link(comments[1]), '/comments/cr/13/1/#pingback_2')
+
+    def test_entry_trackbacks(self):
+        entry = self.create_published_entry()
+        comments = self.create_discussions(entry)
+        feed = EntryTrackbacks()
+        self.assertEquals(list(feed.items(entry)), [comments[2]])
+        self.assertEquals(feed.item_link(comments[2]), '/comments/cr/13/1/#trackback_3')
+
+
+class ComparisonTestCase(TestCase):
+    """Test cases for comparison tools"""
+
+    def test_pearson_score(self):
+        self.assertEquals(pearson_score([0, 1, 2], [0, 1, 2]), 0.0)
+        self.assertEquals(pearson_score([0, 1, 3], [0, 1, 2]),
+                          0.051316701949486232)
+        self.assertEquals(pearson_score([0, 1, 2], [0, 1, 3]),
+                          0.051316701949486232)
+
+    def test_clustered_model(self):
+        params = {'title': 'My entry 1', 'content': 'My content 1',
+                  'tags': 'zinnia, test', 'slug': 'my-entry-1',}
+        Entry.objects.create(**params)
+        params = {'title': 'My entry 2', 'content': 'My content 2',
+                  'tags': 'zinnia, test', 'slug': 'my-entry-2',}
+        Entry.objects.create(**params)
+        cm = ClusteredModel({'queryset': Entry.objects.all()})
+        self.assertEquals(cm.dataset().values(), ['1', '2'])
+        cm = ClusteredModel({'queryset': Entry.objects.all(),
+                             'fields': ['title', 'excerpt', 'content']})
+        self.assertEquals(cm.dataset().values(), ['My entry 1  My content 1',
+                                                  'My entry 2  My content 2'])
+
+    def test_vector_builder(self):
+        params = {'title': 'My entry 1', 'content':
+                  'This is my first content',
+                  'tags': 'zinnia, test', 'slug': 'my-entry-1',}
+        Entry.objects.create(**params)
+        params = {'title': 'My entry 2', 'content':
+                  'My second entry',
+                  'tags': 'zinnia, test', 'slug': 'my-entry-2',}
+        Entry.objects.create(**params)
+        vectors = VectorBuilder({'queryset': Entry.objects.all(),
+                                 'fields': ['title', 'excerpt', 'content']})
+        columns, dataset = vectors()
+        self.assertEquals(columns, ['content', 'This', 'my', 'is', '1',
+                                    'second', '2', 'first'])
+        self.assertEquals(dataset.values(), [[1, 1, 1, 1, 1, 0, 0, 1],
+                                             [0, 0, 0, 0, 0, 1, 1, 0]])
 
 
 class TestTransport(Transport):
@@ -613,9 +889,15 @@ class PingBackTestCase(TestCase):
         self.assertEquals(generate_pingback_content(soup, target, 1000),
                           'My second content with link to first entry and '\
                           'other links : http://localhost:8000/404/ http://example.com/.')
-
         self.assertEquals(generate_pingback_content(soup, target, 50),
-                          '...ond content with link to first entry and other link...')
+                          '...ond content with link to first entry and other lin...')
+
+        soup = BeautifulSoup('<a href="%s">test link</a>' % target)
+        self.assertEquals(generate_pingback_content(soup, target, 6), 'test l...')
+
+        soup = BeautifulSoup('test <a href="%s">link</a>' % target)
+        self.assertEquals(generate_pingback_content(soup, target, 8), '...est link')
+        self.assertEquals(generate_pingback_content(soup, target, 9), 'test link')
 
     def test_pingback_ping(self):
         target = 'http://%s%s' % (self.site.domain, self.first_entry.get_absolute_url())
@@ -876,6 +1158,7 @@ class MetaWeblogTestCase(TestCase):
             1, 'webmaster', 'password', post, 1)
         self.assertEquals(Entry.objects.count(), 3)
         self.assertEquals(Entry.published.count(), 2)
+        del post['dateCreated']
         self.server.metaWeblog.newPost(
             1, 'webmaster', 'password', post, 0)
         self.assertEquals(Entry.objects.count(), 4)
@@ -930,6 +1213,22 @@ class MetaWeblogTestCase(TestCase):
         self.assertEquals(entry.authors.count(), 1)
         self.assertEquals(entry.authors.all()[0], self.contributor)
         self.assertEquals(entry.creation_date, datetime(2000, 1, 1))
+
+    def test_new_media_object(self):
+        file_ = TemporaryFile()
+        file_.write('My test content')
+        file_.seek(0)
+        media = {'name': 'zinnia_test_file.txt',
+                 'type': 'text/plain',
+                 'bits': Binary(file_.read())}
+        file_.close()
+
+        self.assertRaises(Fault, self.server.metaWeblog.newMediaObject,
+                          1, 'contributor', 'password', media)
+        new_media = self.server.metaWeblog.newMediaObject(
+            1, 'webmaster', 'password', media)
+        self.assertTrue('/zinnia_test_file' in new_media['url'])
+        default_storage.delete('/'.join([UPLOAD_TO, new_media['url'].split('/')[-1]]))
 
 
 class ExternalUrlsPingerTestCase(TestCase):
@@ -1223,7 +1522,7 @@ class TemplateTagsTestCase(TestCase):
         context = zinnia_breadcrumbs(source_context)
         self.assertEquals(len(context['breadcrumbs']), 1)
         self.assertEquals(context['breadcrumbs'][0].name, 'Blog')
-        self.assertEquals(context['breadcrumbs'][0].url, '/')
+        self.assertEquals(context['breadcrumbs'][0].url, reverse('zinnia_entry_archive_index'))
         self.assertEquals(context['separator'], '/')
         self.assertEquals(context['template'], 'zinnia/tags/breadcrumbs.html')
 
@@ -1268,8 +1567,9 @@ def suite():
     loader = TestLoader()
 
     test_cases = (ManagersTestCase, EntryTestCase, CategoryTestCase,
-                  ZinniaViewsTestCase, ExternalUrlsPingerTestCase,
-                  TemplateTagsTestCase)
+                  ZinniaViewsTestCase, ZinniaFeedsTestCase,
+                  ZinniaSitemapsTestCase, ComparisonTestCase,
+                  ExternalUrlsPingerTestCase, TemplateTagsTestCase)
     if 'django_xmlrpc' in settings.INSTALLED_APPS:
         test_cases += (PingBackTestCase, MetaWeblogTestCase)
 
