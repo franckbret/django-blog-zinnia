@@ -2,6 +2,7 @@
 from django import forms
 from django.db.models import ManyToOneRel
 from django.db.models import ManyToManyRel
+from django.contrib.sites.models import Site
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.admin.widgets import RelatedFieldWidgetWrapper
 
@@ -43,7 +44,7 @@ class CategoryAdminForm(forms.ModelForm):
 class EntryAdminForm(forms.ModelForm):
     """Form for Entry's Admin"""
     categories = MPTTModelMultipleChoiceField(
-        Category.objects.all(),
+        Category.objects.all(), required=False, label=_('Categories'),
         widget=MPTTFilteredSelectMultiple(_('categories'), False,
                                           attrs={'rows': '10'}))
 
@@ -52,6 +53,8 @@ class EntryAdminForm(forms.ModelForm):
         rel = ManyToManyRel(Category, 'id')
         self.fields['categories'].widget = RelatedFieldWidgetWrapper(
             self.fields['categories'].widget, rel, self.admin_site)
+        self.fields['sites'].initial = [Site.objects.get_current()]
+
 
     class Meta:
         """EntryAdminForm's Meta"""

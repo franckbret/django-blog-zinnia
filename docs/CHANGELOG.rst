@@ -4,10 +4,13 @@ CHANGELOG
 0.8
 ---
 
+* Admin dashboard
 * Using Microformats
 * Mails for comment reply
 * Entry model can be extended
+* More plugins for django-cms
 * Zinnia to Wordpress utility command
+* Code cleaning and optimizations
 * And a lot of bug fixes
 
 0.7
@@ -19,7 +22,7 @@ CHANGELOG
 * Private posts
 * Hierarchical categories
 * TinyMCE integration
-* Code optimisation
+* Code optimizations
 * And a lot of bug fixes
 
 0.6

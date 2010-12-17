@@ -15,6 +15,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.encoding import smart_unicode
 
 from zinnia.models import Entry
+from zinnia.models import Author
 from zinnia.models import Category
 from zinnia.settings import FIRST_WEEK_DAY
 from zinnia.comparison import VectorBuilder
@@ -35,6 +36,13 @@ def get_categories(template='zinnia/tags/categories.html'):
     """Return the categories"""
     return {'template': template,
             'categories': Category.tree.all()}
+
+
+@register.inclusion_tag('zinnia/tags/dummy.html')
+def get_authors(template='zinnia/tags/authors.html'):
+    """Return the published authors"""
+    return {'template': template,
+            'authors': Author.published.all()}
 
 
 @register.inclusion_tag('zinnia/tags/dummy.html')
@@ -187,6 +195,25 @@ def get_recent_comments(number=5, template='zinnia/tags/recent_comments.html'):
 
     return {'template': template,
             'comments': comments}
+
+
+@register.inclusion_tag('zinnia/tags/dummy.html')
+def get_recent_linkbacks(number=5,
+                         template='zinnia/tags/recent_linkbacks.html'):
+    """Return the most recent linkbacks"""
+    entry_published_pks = map(smart_unicode,
+                              Entry.published.values_list('id', flat=True))
+    content_type = ContentType.objects.get_for_model(Entry)
+
+    linkbacks = Comment.objects.filter(
+        content_type=content_type,
+        object_pk__in=entry_published_pks,
+        flags__flag__in=['pingback', 'trackback'],
+        is_public=True).order_by(
+        '-submit_date')[:number]
+
+    return {'template': template,
+            'linkbacks': linkbacks}
 
 
 @register.inclusion_tag('zinnia/tags/dummy.html', takes_context=True)

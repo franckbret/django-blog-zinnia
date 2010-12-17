@@ -35,8 +35,11 @@ class EntryCommentModerator(CommentModerator):
         if not self.email_notification_reply:
             return
 
+        if comment.flags.count():
+            return
+
         exclude_list = [manager_tuple[1] for manager_tuple
-                        in settings.MANAGERS] + [comment.user_email]
+                        in settings.MANAGERS] + [comment.userinfo['email']]
         recipient_list = set([comment.userinfo['email']
                               for comment in content_object.comments
                               if comment.userinfo['email']]) ^ \
@@ -57,7 +60,7 @@ class EntryCommentModerator(CommentModerator):
 
     def moderate(self, comment, content_object, request):
         """Need to pass Akismet test"""
-        if not AKISMET_COMMENT:
+        if not AKISMET_COMMENT or not AKISMET_API_KEY:
             return False
 
         try:

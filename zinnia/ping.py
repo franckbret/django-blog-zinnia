@@ -4,6 +4,7 @@ import xmlrpclib
 import threading
 from urllib2 import urlopen
 from urlparse import urlsplit
+from logging import getLogger
 
 from BeautifulSoup import BeautifulSoup
 
@@ -40,10 +41,12 @@ class DirectoryPinger(threading.Thread):
 
     def run(self):
         """Ping entries to a Directory in a Thread"""
+        logger = getLogger('zinnia.ping.directory')
         socket.setdefaulttimeout(self.timeout)
         for entry in self.entries:
             reply = self.ping_entry(entry)
             self.results.append(reply)
+            logger.info('%s : %s' % (self.server_name, reply['message']))
         socket.setdefaulttimeout(None)
 
     def ping_entry(self, entry):
@@ -61,7 +64,7 @@ class DirectoryPinger(threading.Thread):
                 reply = self.server.weblogUpdates.ping(CURRENT_SITE.name,
                                                        BLOG_URL, entry_url,
                                                        categories)
-            except xmlrpclib.ProtocolError:
+            except Exception:
                 reply = {'message': '%s is an invalid directory.' % \
                          self.server_name,
                          'flerror': True}
@@ -83,6 +86,7 @@ class ExternalUrlsPinger(threading.Thread):
 
     def run(self):
         """Ping external URLS in a Thread"""
+        logger = getLogger('zinnia.ping.external_urls')
         socket.setdefaulttimeout(self.timeout)
 
         external_urls = self.find_external_urls(self.entry)
@@ -91,6 +95,7 @@ class ExternalUrlsPinger(threading.Thread):
         for url, server_name in external_urls_pingable.items():
             reply = self.pingback_url(server_name, url)
             self.results.append(reply)
+            logger.info('%s : %s' % (url, reply))
 
         socket.setdefaulttimeout(None)
 
@@ -143,6 +148,6 @@ class ExternalUrlsPinger(threading.Thread):
         try:
             server = xmlrpclib.ServerProxy(server_name)
             reply = server.pingback.ping(self.entry_url, target_url)
-        except (xmlrpclib.Fault, xmlrpclib.ProtocolError):
+        except xmlrpclib.Error:
             reply = '%s cannot be pinged.' % target_url
         return reply

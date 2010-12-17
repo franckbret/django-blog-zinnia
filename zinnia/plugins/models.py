@@ -1,10 +1,13 @@
 """Models of Zinnia CMS Plugins"""
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.db.models.signals import post_delete
 from django.utils.translation import ugettext_lazy as _
 
 from tagging.models import Tag
 from cms.models import CMSPlugin
+from menus.menu_pool import menu_pool
 
 from zinnia.models import Entry
 from zinnia.models import Category
@@ -38,6 +41,12 @@ class LatestEntriesPlugin(CMSPlugin):
         the template_to_render attribute"""
         return self.template_to_render
 
+    def copy_relations(self, old_instance):
+        """Duplicate ManyToMany relations on plugin copy"""
+        self.tags = old_instance.tags.all()
+        self.authors = old_instance.authors.all()
+        self.categories = old_instance.categories.all()
+
     def __unicode__(self):
         return _('%s entries') % self.number_of_entries
 
@@ -56,5 +65,32 @@ class SelectedEntriesPlugin(CMSPlugin):
         the template_to_render attribute"""
         return self.template_to_render
 
+    def copy_relations(self, old_instance):
+        """Duplicate ManyToMany relations on plugin copy"""
+        self.entries = old_instance.entries.all()
+
     def __unicode__(self):
         return _('%s entries') % self.entries.count()
+
+
+class RandomEntriesPlugin(CMSPlugin):
+    """CMS Plugin for displaying random entries"""
+
+    number_of_entries = models.IntegerField(_('number of entries'), default=5)
+    template_to_render = models.CharField(_('template'), blank=True,
+                                          max_length=250, choices=TEMPLATES,
+                                          help_text=_('Template used to display the plugin'))
+
+    def __unicode__(self):
+        return _('%s entries') % self.number_of_entries
+
+
+def invalidate_menu_cache(sender, **kwargs):
+    """Signal receiver to invalidate the menu_pool
+    cache when an entry is posted"""
+    menu_pool.clear()
+
+post_save.connect(invalidate_menu_cache, sender=Entry,
+                  dispatch_uid='zinnia.entry.postsave')
+post_delete.connect(invalidate_menu_cache, sender=Entry,
+                    dispatch_uid='zinnia.entry.postdelete')

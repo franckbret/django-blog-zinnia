@@ -3,8 +3,10 @@ import os
 
 gettext = lambda s: s
 
-DATABASE_ENGINE = 'sqlite3'
-DATABASE_NAME = os.path.join(os.path.dirname(__file__), 'demo.db')
+DATABASES = {'default':
+             {'ENGINE': 'django.db.backends.sqlite3',
+              'NAME': os.path.join(os.path.dirname(__file__), 'demo.db')}
+             }
 
 MEDIA_URL = 'http://localhost:8000/'
 
@@ -19,8 +21,10 @@ LANGUAGE_CODE = 'en'
 
 LANGUAGES = (('en', gettext('English')),
              ('fr', gettext('French')),
-             ('es', gettext('Spanish')),
              ('de', gettext('German')),
+             ('es', gettext('Spanish')),
+             ('it', gettext('Italian')),
+             ('nl', gettext('Dutch')),
              ('ru', gettext('Russian')),
              ('zh_CN', gettext('Simplified Chinese')),)
 
@@ -69,4 +73,5 @@ INSTALLED_APPS = (
 from zinnia.xmlrpc import ZINNIA_XMLRPC_METHODS
 XMLRPC_METHODS = ZINNIA_XMLRPC_METHODS
 
+ZINNIA_PING_DIRECTORIES = ()
 ZINNIA_PING_EXTERNAL_URLS = False

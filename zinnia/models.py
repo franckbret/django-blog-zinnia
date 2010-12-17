@@ -3,20 +3,16 @@ import warnings
 from datetime import datetime
 
 from django.db import models
+from django.utils.html import strip_tags
+from django.utils.html import linebreaks
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.db.models.signals import post_save
 from django.utils.importlib import import_module
-from django.template.defaultfilters import striptags
-from django.template.defaultfilters import linebreaks
 from django.contrib.comments.moderation import moderator
 from django.utils.translation import ugettext_lazy as _
 
 import mptt
-try:
-    from mptt.models import MPTTModel
-except ImportError:
-    MPTTModel = models.Model
 from tagging.fields import TagField
 
 from zinnia.settings import USE_BITLY
@@ -25,13 +21,28 @@ from zinnia.settings import ENTRY_TEMPLATES
 from zinnia.settings import ENTRY_BASE_MODEL
 from zinnia.managers import entries_published
 from zinnia.managers import EntryPublishedManager
+from zinnia.managers import AuthorPublishedManager
 from zinnia.managers import DRAFT, HIDDEN, PUBLISHED
 from zinnia.moderator import EntryCommentModerator
 from zinnia.signals import ping_directories_handler
 from zinnia.signals import ping_external_urls_handler
 
 
-class Category(MPTTModel):
+class Author(User):
+    """Proxy Model around User"""
+
+    objects = models.Manager()
+    published = AuthorPublishedManager()
+
+    def entries_published_set(self):
+        """Return only the entries published"""
+        return entries_published(self.entry_set)
+
+    class Meta:
+        proxy = True
+
+
+class Category(models.Model):
     """Category object for Entry"""
 
     title = models.CharField(_('title'), max_length=255)
@@ -52,7 +63,7 @@ class Category(MPTTModel):
         """Return category's tree path, by his ancestors"""
         if self.parent:
             return '%s/%s' % (self.parent.tree_path, self.slug)
-        return '%s' % self.slug
+        return self.slug
 
     def __unicode__(self):
         return self.title
@@ -67,10 +78,6 @@ class Category(MPTTModel):
         ordering = ['title']
         verbose_name = _('category')
         verbose_name_plural = _('categories')
-
-    class MPTTMeta:
-        """Category's MPTTMeta"""
-        order_insertion_by = ['title']
 
 
 class EntryAbstractClass(models.Model):
@@ -88,7 +95,8 @@ class EntryAbstractClass(models.Model):
                                 help_text=_('optional element'))
 
     tags = TagField(_('tags'))
-    categories = models.ManyToManyField(Category, verbose_name=_('categories'))
+    categories = models.ManyToManyField(Category, verbose_name=_('categories'),
+                                        blank=True, null=True)
     related = models.ManyToManyField('self', verbose_name=_('related entries'),
                                      blank=True, null=True)
 
@@ -154,7 +162,7 @@ class EntryAbstractClass(models.Model):
     @property
     def word_count(self):
         """Count the words of an entry"""
-        return len(striptags(self.html_content).split())
+        return len(strip_tags(self.html_content).split())
 
     @property
     def is_actual(self):
@@ -249,11 +257,7 @@ class Entry(get_base_model()):
                        ('can_change_author', 'Can change author'), )
 
 
-if hasattr(mptt, 'register'):
-    mptt.register(Category, **dict([(attr, getattr(Category.MPTTMeta, attr))
-                                    for attr in dir(Category.MPTTMeta)
-                                    if attr[:1] != '_']))
-
+mptt.register(Category, order_insertion_by=['title'])
 post_save.connect(ping_directories_handler, sender=Entry)
 post_save.connect(ping_external_urls_handler, sender=Entry)
 moderator.register(Entry, EntryCommentModerator)
